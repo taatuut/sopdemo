@@ -29,7 +29,10 @@ services:
     platform: linux/amd64
     image: solace/solace-pubsub-standard:latest
     container_name: solace-broker
-    shm_size: 1g
+    shm_size: 2g
+    environment:
+      - username_admin_password=admin
+      - username_adminglobalaccess_level=admin
     ulimits:
       core: 0
       nofile:
@@ -40,6 +43,13 @@ services:
       - "8008:8008"
       - "55443:55443"
       - "55554:55555"
+      - "1883:1883"
+      - "8000:8000"
+      - "5550:5550"
+      - "5672:5672"
+      - "9000:9000"
+      - "2222:2222"
+
   jpa-oracle-source:
     platform: linux/amd64
     image: solace/mi-databases-jpa:2.0.1

@@ -1,6 +1,11 @@
 spring:
   application:
     name: jpa-oracle-source
+  datasource:
+    url: jdbc:oracle:thin:@//oracle19c:1521/FREEPDB1
+    username: testuser
+    password: testuser
+    driver-class-name: oracle.jdbc.OracleDriver
   cloud:
     function:
       definition: oracleToSolace
@@ -92,3 +97,43 @@ management:
     metrics:
       export:
         enabled: false
+
+solace-persistence:
+  datasource:
+    driver-class-name: oracle.jdbc.OracleDriver
+    url: jdbc:oracle:thin:@//oracle19c:1521/FREEPDB1
+    username: testuser
+    password: testuser
+    hikari:
+      initializationFailTimeout: -1
+      connection-timeout: 5000
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    database: oracle
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.Oracle10gDialect
+        jdbc:
+          batch_size: 100
+        order_updates: true
+        generate_statistics: false
+  source:
+    dbQueryMode: jpa
+    sendBatchSize: 1
+    sendPoolSize: 100
+    queryMax: 2
+    maxDbRetry: 3
+    triggerInterval: 2000
+    retryInterval: 10
+    enableRetry: true
+    retryCount: 3
+    enableBufferedJpaBatch: true
+    bufferWaitSeconds: 5
+    enableTrackingId: true
+    enableDatabaseTimestamp: true
+    enableConnectorTimestamp: true
+    enableBenchmarkInfo: true
+    skipMismatchError: false
+    indicatorFlag: true

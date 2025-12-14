@@ -1,6 +1,11 @@
 spring:
   application:
     name: jpa-postgres-target
+  datasource:
+    url: jdbc:postgresql://postgres:5432/testdb
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
   cloud:
     function:
       definition: solaceToPostgres
@@ -83,3 +88,63 @@ management:
     metrics:
       export:
         enabled: false
+
+solace-persistence:
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://postgres:5432/testdb
+    username: postgres
+    password: postgres
+    hikari:
+      initializationFailTimeout: -1
+      connection-timeout: 5000
+      maximum-pool-size: 5
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    database: postgresql
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+        generate_statistics: false
+
+  sink:
+    enabled: true
+
+    # Queue(s) to consume from Solace
+    queueNames:
+      - Q.ORACLE.TEST_IDENTIFICATION
+      - Q.ORACLE.TEST_METRICS
+
+    # Persist messages using JPA
+    dbWriteMode: jpa
+
+    # Commit behavior
+    commitInterval: 1
+    commitTimeout: 5000
+
+    # Reliability
+    maxDbRetry: 3
+    retryInterval: 5
+    enableRetry: true
+    retryCount: 3
+
+    # Message handling
+    acknowledgeOnSuccess: true
+    acknowledgeOnFailure: false
+
+    # Performance tuning
+    writeBatchSize: 1
+    writePoolSize: 5
+
+    # Metadata
+    enableTrackingId: true
+    enableConnectorTimestamp: true
+    enableDatabaseTimestamp: true
