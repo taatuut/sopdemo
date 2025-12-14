@@ -1,0 +1,94 @@
+spring:
+  application:
+    name: jpa-oracle-source
+  cloud:
+    function:
+      definition: oracleToSolace
+    stream:
+      bindings:
+        oracleToSolace-in-0:
+          destination: oracle-source
+          group: oracleSourceGroup
+        oracleToSolace-out-0:
+          destination: oracle-to-solace-topic
+      binders:
+        solace:
+          type: solace
+          defaultCandidate: true
+          environment:
+            solace:
+              java:
+                host: tcp://solace-broker:55555
+                msgVpn: default
+                clientUsername: default
+                clientPassword: default
+
+connector:
+  databases:
+    source:
+      type: jpa
+      dialect: oracle
+      url: jdbc:oracle:thin:@oracle19c:1521/FREEPDB1   # <── UPDATED for Oracle Free
+      username: testuser                               # or SYSTEM if you prefer
+      password: testuser
+      driverClassName: oracle.jdbc.OracleDriver
+      pool:
+        maxActive: 5
+        maxIdle: 5
+
+  workflows:
+    - name: oracle-test-identification
+      description: Stream TEST_IDENTIFICATION rows to Solace
+      source:
+        type: database
+        databaseRef: source
+        table: TEST_IDENTIFICATION
+        polling:
+          intervalMs: 1000
+      target:
+        type: solace
+        destinationType: topic
+        topic: db/oracle/test_identification
+
+    - name: oracle-test-metrics
+      description: Stream TEST_METRICS rows to Solace
+      source:
+        type: database
+        databaseRef: source
+        table: TEST_METRICS
+        polling:
+          intervalMs: 1000
+      target:
+        type: solace
+        destinationType: topic
+        topic: db/oracle/test_metrics
+
+solace:
+  connector:
+    # At least one workflow must be enabled
+    workflows:
+      0:
+        enabled: true
+      1:
+        enabled: true
+
+management:
+  simple:
+    metrics:
+      export:
+        enabled: true
+
+  datadog:
+    metrics:
+      export:
+        enabled: false
+
+  dynatrace:
+    metrics:
+      export:
+        enabled: false
+
+  influx:
+    metrics:
+      export:
+        enabled: false

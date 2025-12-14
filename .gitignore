@@ -205,3 +205,10 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Custom
+*.pyc
+.idea/
+.DS_Store
+pubsubplus-connector-database-2.0.1-image.tar
+pubsubplus-connector-database-2.0.1-User-Guide.pdf

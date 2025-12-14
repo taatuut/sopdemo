@@ -1,0 +1,100 @@
+services:
+  oracle19c:
+    image: gvenzl/oracle-free:23-slim
+    container_name: oracle19c
+    environment:
+      ORACLE_PASSWORD: Oradoc_db1        # admin (SYS/SYSTEM) password
+      APP_USER: testuser                 # optional: auto-created user
+      APP_USER_PASSWORD: testuser
+      # NOTE: no ORACLE_DATABASE needed here
+      #ORACLE_DATABASE: FREEPDB1
+    ports:
+      - "1521:1521"
+      - "5500:5500"
+    volumes:
+      - oracle-free-data:/opt/oracle/oradata
+      # optional, if you want automatic schema creation
+      - ./oracle-init:/container-entrypoint-startdb.d
+
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: testdb
+    ports:
+      - "5432:5432"
+
+  solace-broker:
+    platform: linux/amd64
+    image: solace/solace-pubsub-standard:latest
+    container_name: solace-broker
+    shm_size: 1g
+    ulimits:
+      core: 0
+      nofile:
+        soft: 1048576
+        hard: 1048576
+    ports:
+      - "8080:8080"
+      - "8008:8008"
+      - "55443:55443"
+      - "55554:55555"
+  jpa-oracle-source:
+    platform: linux/amd64
+    image: solace/mi-databases-jpa:2.0.1
+    container_name: jpa-oracle-source
+    depends_on:
+      - oracle19c
+      - solace-broker
+    environment:
+      SPRING_CONFIG_LOCATION: file:/app/external/spring/config/
+      SPRING_CLOUD_CONFIG_ENABLED: "false"
+      SPRING_CLOUD_CONFIG_IMPORT_CHECK_ENABLED: "false"
+
+      # Correct Micrometer exporter disable flags
+      MANAGEMENT_DATADOG_METRICS_EXPORT_ENABLED: "false"
+      MANAGEMENT_DYNATRACE_METRICS_EXPORT_ENABLED: "false"
+      MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED: "false"
+      MANAGEMENT_GRAPHITE_METRICS_EXPORT_ENABLED: "false"
+      MANAGEMENT_ATLAS_METRICS_EXPORT_ENABLED: "false"
+
+      # Turn off observations/tracing to avoid ObservationFilter wiring
+      MANAGEMENT_OBSERVATIONS_ENABLED: "false"
+      MANAGEMENT_TRACING_ENABLED: "false"
+    volumes:
+      - ./jpa-oracle-config:/app/external/spring/config:ro
+
+  jpa-postgres-target:
+    platform: linux/amd64
+    image: solace/mi-databases-jpa:2.0.1
+    container_name: jpa-postgres-target
+    depends_on:
+      - postgres
+      - solace-broker
+    environment:
+      SPRING_CONFIG_LOCATION: file:/app/external/spring/config/
+      SPRING_CLOUD_CONFIG_ENABLED: "false"
+      SPRING_CLOUD_CONFIG_IMPORT_CHECK_ENABLED: "false"
+
+      MANAGEMENT_DATADOG_METRICS_EXPORT_ENABLED: "false"
+      MANAGEMENT_DYNATRACE_METRICS_EXPORT_ENABLED: "false"
+      MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED: "false"
+      MANAGEMENT_GRAPHITE_METRICS_EXPORT_ENABLED: "false"
+      MANAGEMENT_ATLAS_METRICS_EXPORT_ENABLED: "false"
+
+      MANAGEMENT_OBSERVATIONS_ENABLED: "false"
+      MANAGEMENT_TRACING_ENABLED: "false"
+    volumes:
+      - ./jpa-postgres-config:/app/external/spring/config:ro
+
+  oracle-writer:
+    build: ./oracle-writer
+    depends_on: [oracle19c]
+
+  postgres-reporter:
+    build: ./postgres-reporter
+    depends_on: [postgres]
+
+volumes:
+  oracle-free-data:

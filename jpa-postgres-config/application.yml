@@ -1,0 +1,85 @@
+spring:
+  application:
+    name: jpa-postgres-target
+  cloud:
+    function:
+      definition: solaceToPostgres
+    stream:
+      bindings:
+        solaceToPostgres-in-0:
+          destination: db-oracle-queues
+          group: postgresTargetGroup
+      binders:
+        solace:
+          type: solace
+          defaultCandidate: true
+          environment:
+            solace:
+              java:
+                host: tcp://solace-broker:55555
+                msgVpn: default
+                clientUsername: default
+                clientPassword: default
+
+connector:
+  databases:
+    target:
+      type: jpa
+      dialect: postgresql
+      url: jdbc:postgresql://postgres:5432/testdb
+      username: postgres
+      password: postgres
+      driverClassName: org.postgresql.Driver
+      pool:
+        maxActive: 5
+        maxIdle: 5
+
+  workflows:
+    - name: postgres-test-identification
+      description: Consume Solace queue and write to test_identification
+      source:
+        type: solace
+        queue: Q.ORACLE.TEST_IDENTIFICATION
+      target:
+        type: database
+        databaseRef: target
+        table: test_identification
+
+    - name: postgres-test-metrics
+      description: Consume Solace queue and write to test_metrics
+      source:
+        type: solace
+        queue: Q.ORACLE.TEST_METRICS
+      target:
+        type: database
+        databaseRef: target
+        table: test_metrics
+
+solace:
+  connector:
+    workflows:
+      0:
+        enabled: true
+      1:
+        enabled: true
+
+management:
+  simple:
+    metrics:
+      export:
+        enabled: true
+
+  datadog:
+    metrics:
+      export:
+        enabled: false
+
+  dynatrace:
+    metrics:
+      export:
+        enabled: false
+
+  influx:
+    metrics:
+      export:
+        enabled: false
