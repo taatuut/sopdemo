@@ -1,0 +1,6 @@
+mappings:
+  - topic: "db/oracle/test_identification"
+    table: "test_identification"
+
+  - topic: "db/oracle/test_metrics"
+    table: "test_metrics"

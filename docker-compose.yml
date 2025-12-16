@@ -21,34 +21,38 @@ services:
     container_name: postgres
     environment:
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: testdb
+      POSTGRES_DB: postgres
     ports:
       - "5432:5432"
 
-  solace-broker:
-    platform: linux/amd64
-    image: solace/solace-pubsub-standard:latest
-    container_name: solace-broker
-    shm_size: 2g
-    environment:
-      - username_admin_password=admin
-      - username_adminglobalaccess_level=admin
-    ulimits:
-      core: 0
-      nofile:
-        soft: 1048576
-        hard: 1048576
-    ports:
-      - "8080:8080"
-      - "8008:8008"
-      - "55443:55443"
-      - "55554:55555"
-      - "1883:1883"
-      - "8000:8000"
-      - "5550:5550"
-      - "5672:5672"
-      - "9000:9000"
-      - "2222:2222"
+  # solace-broker:
+  #   platform: linux/amd64
+  #   hostname: solace-broker
+  #   container_name: solace-broker
+  #   image: solace/solace-pubsub-standard:latest
+  #   volumes:
+  #     - solace_data:/var/lib/solace
+  #   shm_size: 2g
+  #   ulimits:
+  #     core: -1
+  #     nofile:
+  #       soft: 2448
+  #       hard: 1048576
+  #   deploy:
+  #     restart_policy:
+  #       condition: on-failure
+  #       max_attempts: 1
+  #   ports:
+  #     - '8008:8008'   # Web transport
+  #     - '1443:1443'   # Web transport TLS
+  #     - "8080:8080"   # Web UI
+  #     - "1883:1883"   # MQTT
+  #     - "55554:55555" # Default messaging port
+  #     - "5550:5550"   # Health Check Listen port
+  #   environment:
+  #     - username_admin_globalaccesslevel=admin
+  #     - username_admin_password=admin
+  #     - system_scaling_maxconnectioncount=100
 
   jpa-oracle-source:
     platform: linux/amd64
@@ -108,3 +112,5 @@ services:
 
 volumes:
   oracle-free-data:
+  solace_data:
+
