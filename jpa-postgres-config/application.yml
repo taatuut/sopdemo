@@ -2,12 +2,11 @@ spring:
   application:
     name: jpa-postgres-target
 
-  # DB (Postgres) - your confirmed creds/db
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://postgres:5432/postgres
-    username: postgres
-    password: postgres
+    url: ${POSTGRES_JDBC_URL}
+    username: ${POSTGRES_USERNAME}
+    password: ${POSTGRES_PASSWORD}
 
   jpa:
     hibernate:
@@ -17,61 +16,70 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-# Avoid Spring Cloud Config checks
-spring:
   cloud:
     config:
       enabled: false
       import-check:
         enabled: false
 
-# Disable metrics exporters that were killing startup
-management:
-  observations:
-    enabled: false
-  tracing:
-    enabled: false
-  datadog:
-    metrics:
-      export:
-        enabled: false
-  dynatrace:
-    metrics:
-      export:
-        enabled: false
-  influx:
-    metrics:
-      export:
-        enabled: false
-  prometheus:
-    metrics:
-      export:
-        enabled: false
-  graphite:
-    metrics:
-      export:
-        enabled: false
-  atlas:
-    metrics:
-      export:
-        enabled: false
+    # MUST exist for this connector image
+    function:
+      definition: solaceToPostgres
 
-# --- Solace Connector core config ---
+    stream:
+      binders:
+        solace:
+          type: solace
+          environment:
+            solace:
+              java:
+                host: ${SOLACE_HOST}
+                msgVpn: ${SOLACE_VPN}
+                clientUsername: ${SOLACE_USERNAME}
+                clientPassword: ${SOLACE_PASSWORD}
+
+      bindings:
+        solaceToPostgres-in-0:
+          binder: solace
+          destination: Q_POSTGRES_TARGET
+
+# Connector runtime config
+connector:
+  databases:
+    target:
+      type: jpa
+      dialect: postgres
+      url: ${POSTGRES_JDBC_URL}
+      username: ${POSTGRES_USERNAME}
+      password: ${POSTGRES_PASSWORD}
+      driverClassName: org.postgresql.Driver
+      pool:
+        maxActive: 5
+        maxIdle: 5
+
+  workflows:
+    - name: postgres_sink
+      enabled: true
+      source:
+        type: solace
+        destinationType: queue
+        queue: Q_POSTGRES_TARGET
+      target:
+        type: database
+        databaseRef: target
+
+# Some builds still require this "at least one workflow enabled" flag
 solace:
   connector:
-    # REQUIRED: at least one workflow enabled (fixes: “At least 1 workflow must be enabled”)
     workflows:
-      - name: postgres-sink
+      0:
         enabled: true
 
-# --- Connector-specific DB sink config ---
+# keep if you use connector_config.properties for mapping/rules
 solace-persistence:
-  # Tell the connector where to find connector_config.properties
-  # (this is how the Database Connector loads mapping + queue/topic rules)
   config:
     propertiesFile: file:/app/external/spring/config/connector_config.properties
 
-  # Sink behavior
   sink:
     db-crud-mode: jpa
     jpaBatchMode: true
@@ -79,3 +87,10 @@ solace-persistence:
     jpaMaxRetry: 3
     jpaRetryWaitMilliseconds: 3000
     payloadFormat: json
+
+management:
+  datadog:
+    metrics:
+      export:
+        enabled: false
+  

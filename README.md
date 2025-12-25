@@ -66,14 +66,20 @@ This repo contains:
 
 ## 3. Prerequisites
 
+This repo provides a `docker-compose.yml` file to run demo as a standalone setup. You can use existing (Cloud) components like Oracle, PostgreSQL database and Solace broker by changing environment parameters. Docker Desktop can convert your Compose file into Kubernetes manifests and deploy them to the Kubernetes cluster.
+
 You’ll need:
 
-1. **Docker** or similar (`podman`, `colima`) and **docker-compose** installed.
+1. **Docker Desktop** or similar (`podman`, `colima` with **docker-compose** installed).
 2. Ability to log in to **Oracle Container Registry** and accept the Oracle Database 19c image license.
 3. Access to the **Solace Databases (JPA) Micro‑Integration** container image:
    - Download from Solace Integration Hub (Databases JPA connector).
    - You should end up with a `.tar` image file which you then load into Docker.
 4. Internet access for pulling the Postgres and Solace broker images (once).
+
+_Optional_
+
+When not using Docker Desktop, can work with `colima`. Note that some caveats apply.
 
 ### Colima
 
@@ -107,6 +113,30 @@ On Apple Silicon (M1/M2/M3), Oracle Database is not available natively. The offi
 
 On macOS M use ARM-native “Oracle Free 23ai” image like `gvenzl/oracle-free`.
 
+### Uninstall
+
+```sh
+colima stop --force
+colima delete
+limactl stop --all
+limactl delete --all
+pkill -f colima
+pkill -f limactl
+osascript -e 'quit app "Docker"'
+osascript -e 'quit app "Podman Desktop"'  
+rm -rf ~/.docker
+rm -rf ~/.colima
+rm -rf ~/.lima
+sudo rm -rf /Library/Containers/com.docker.docker
+sudo rm -rf /Library/Group\ Containers/group.com.docker
+brew uninstall --cask docker-desktop podman-desktop
+brew uninstall colima docker docker-completion docker-compose docker-credential-helper lima lima-additional-guestagents
+brew list | grep -E 'docker|lima|colima'
+brew list --cask | grep -E 'docker|podman'
+ps aux | grep -E 'lima|colima|podman' | grep -v grep
+ls ~/.lima ~/.colima 2>/dev/null
+```
+
 ## 4. Directory Structure
 
 After unpacking / cloning:
@@ -139,7 +169,7 @@ sopdemo/
 
 _Only if not on macOS_
 
-1. Go to Oracle Container Registry (you must have an Oracle account).
+1. Go to Oracle Container Registry https://container-registry.oracle.com/ (you must have an Oracle account).
 2. Accept the license for **Oracle Database Enterprise Edition** 19c.
 3. Log in and pull the image:
 
@@ -190,15 +220,22 @@ If necessary check for running containers (starting with `docker ps -a `) to avo
 docker-compose up -d oracle19c postgres solace-broker
 ```
 
-**Wait a few minutes** for Oracle to initialize. You can check logs:
+The Oracle container will automatically run `oracle-init/01_create_schema.sql` during its first startup.
+
+**Wait a few minutes** for Oracle to initialize. You can check logs and/or stats:
 
 ```sh
 docker logs -f oracle19c
+docker stats oracle19c
 ```
 
-Once Oracle writes that the database is open and ready, you can continue.
+Once Oracle writes that the database is open and ready, you can continue. See Appendix Oracle Log for more details. 
 
-> The Oracle container will automatically run `oracle-init/01_create_schema.sql` during its first startup.
+```sh
+#########################
+DATABASE IS READY TO USE!
+#########################
+```
 
 ### 6.3. Start JPA Micro‑Integration Instances
 
@@ -600,4 +637,167 @@ Checkpoint not complete
 Thread 1 advanced to log sequence 16 (LGWR switch),  current SCN: 2277673
   Current log# 2 seq# 16 mem# 0: /opt/oracle/oradata/FREE/redo02.log
 FREEPDB1(3):Resize operation completed for file# 23, fname /opt/oracle/oradata/FREE/FREEPDB1/undotbs01.dbf, old size 11264K, new size 21504K
+```
+
+# Appendix Oracle Log
+
+```sh
+docker logs -f oracle19c
+[2025:12:18 17:34:49]: Acquiring lock .ORCLCDB.create_lck with heartbeat 30 secs
+[2025:12:18 17:34:49]: Lock acquired
+[2025:12:18 17:34:49]: Starting heartbeat
+[2025:12:18 17:34:49]: Lock held .ORCLCDB.create_lck
+ORACLE EDITION: ENTERPRISE
+
+LSNRCTL for Linux: Version 19.0.0.0.0 - Production on 18-DEC-2025 17:34:49
+
+Copyright (c) 1991, 2019, Oracle.  All rights reserved.
+
+Starting /opt/oracle/product/19c/dbhome_1/bin/tnslsnr: please wait...
+
+TNSLSNR for Linux: Version 19.0.0.0.0 - Production
+System parameter file is /opt/oracle/product/19c/dbhome_1/network/admin/listener.ora
+Log messages written to /opt/oracle/diag/tnslsnr/544c5dcf5add/listener/alert/log.xml
+Listening on: (DESCRIPTION=(ADDRESS=(PROTOCOL=ipc)(KEY=EXTPROC1)))
+Listening on: (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=0.0.0.0)(PORT=1521)))
+
+Connecting to (DESCRIPTION=(ADDRESS=(PROTOCOL=IPC)(KEY=EXTPROC1)))
+STATUS of the LISTENER
+------------------------
+Alias                     LISTENER
+Version                   TNSLSNR for Linux: Version 19.0.0.0.0 - Production
+Start Date                18-DEC-2025 17:34:49
+Uptime                    0 days 0 hr. 0 min. 0 sec
+Trace Level               off
+Security                  ON: Local OS Authentication
+SNMP                      OFF
+Listener Parameter File   /opt/oracle/product/19c/dbhome_1/network/admin/listener.ora
+Listener Log File         /opt/oracle/diag/tnslsnr/544c5dcf5add/listener/alert/log.xml
+Listening Endpoints Summary...
+  (DESCRIPTION=(ADDRESS=(PROTOCOL=ipc)(KEY=EXTPROC1)))
+  (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=0.0.0.0)(PORT=1521)))
+The listener supports no services
+The command completed successfully
+Prepare for db operation
+8% complete
+Copying database files
+31% complete
+Creating and starting Oracle instance
+32% complete
+36% complete
+40% complete
+43% complete
+46% complete
+Completing Database Creation
+51% complete
+54% complete
+Creating Pluggable Databases
+58% complete
+77% complete
+Executing Post Configuration Actions
+100% complete
+Database creation complete. For details check the logfiles at:
+ /opt/oracle/cfgtoollogs/dbca/ORCLCDB.
+Database Information:
+Global Database Name:ORCLCDB
+System Identifier(SID):ORCLCDB
+Look at the log file "/opt/oracle/cfgtoollogs/dbca/ORCLCDB/ORCLCDB.log" for further details.
+
+SQL*Plus: Release 19.0.0.0.0 - Production on Thu Dec 18 17:49:24 2025
+Version 19.3.0.0.0
+
+Copyright (c) 1982, 2019, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
+Version 19.3.0.0.0
+
+SQL> 
+System altered.
+
+SQL> 
+System altered.
+
+SQL> 
+Pluggable database altered.
+
+SQL> 
+PL/SQL procedure successfully completed.
+
+SQL> SQL> 
+Session altered.
+
+SQL> 
+User created.
+
+SQL> 
+Grant succeeded.
+
+SQL> 
+Grant succeeded.
+
+SQL> 
+Grant succeeded.
+
+SQL> 
+User altered.
+
+SQL> SQL> Disconnected from Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
+Version 19.3.0.0.0
+The Oracle base remains unchanged with value /opt/oracle
+
+Executing user defined scripts
+/opt/oracle/runUserScripts.sh: running /opt/oracle/scripts/extensions/setup/swapLocks.sh
+[2025:12:18 17:49:29]: Releasing lock .ORCLCDB.create_lck
+[2025:12:18 17:49:29]: Lock released .ORCLCDB.create_lck
+[2025:12:18 17:49:29]: Acquiring lock .ORCLCDB.exist_lck with heartbeat 30 secs
+[2025:12:18 17:49:29]: Lock acquired
+[2025:12:18 17:49:29]: Starting heartbeat
+[2025:12:18 17:49:29]: Lock held .ORCLCDB.exist_lck
+
+DONE: Executing user defined scripts
+
+
+Executing user defined scripts
+/opt/oracle/runUserScripts.sh: running /opt/oracle/scripts/setup/01_create_schema.sql
+ERROR:
+ORA-65011: Pluggable database FREEPDB1 does not exist.
+
+
+ERROR:
+ORA-01435: user does not exist
+
+
+
+Table created.
+
+
+Table created.
+
+
+Sequence created.
+
+
+Sequence created.
+
+
+
+DONE: Executing user defined scripts
+
+The Oracle base remains unchanged with value /opt/oracle
+#########################
+DATABASE IS READY TO USE!
+#########################
+The following output is now a tail of the alert.log:
+ORCLPDB1(3):
+ORCLPDB1(3):XDB initialized.
+2025-12-18T17:49:24.803493+00:00
+ALTER SYSTEM SET control_files='/opt/oracle/oradata/ORCLCDB/control01.ctl' SCOPE=SPFILE;
+2025-12-18T17:49:24.826214+00:00
+ALTER SYSTEM SET local_listener='' SCOPE=BOTH;
+   ALTER PLUGGABLE DATABASE ORCLPDB1 SAVE STATE
+Completed:    ALTER PLUGGABLE DATABASE ORCLPDB1 SAVE STATE
+
+XDB initialized.
 ```

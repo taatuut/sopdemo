@@ -1,0 +1,26 @@
+{
+    "app": {
+        "name": "sopdemo",
+        "url": "http://localhost:54321",
+        "dummy_url": "http://example.com/sopdemo-endpoint",
+        "queues": [
+            {
+            "name": "Q_POSTGRES_TARGET",
+            "subscriptions": [
+                "db/oracle/test_identification",
+                "db/oracle/test_metrics"
+            ]
+            }
+        ],
+        "topic": "cleanpulse/messages",
+        "debug": true,
+        "log_level": "info",
+        "report_file": "output/report.txt"
+    },
+    "database": {
+        "host": "127.0.0.1",
+        "port": 5432,
+        "user": "admin",
+        "password": "admin"
+    }
+}

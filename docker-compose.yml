@@ -1,116 +1,106 @@
 services:
-  oracle19c:
-    image: gvenzl/oracle-free:23-slim
-    container_name: oracle19c
-    environment:
-      ORACLE_PASSWORD: Oradoc_db1        # admin (SYS/SYSTEM) password
-      APP_USER: testuser                 # optional: auto-created user
-      APP_USER_PASSWORD: testuser
-      # NOTE: no ORACLE_DATABASE needed here
-      #ORACLE_DATABASE: FREEPDB1
+  solace-broker:
+    image: solace/solace-pubsub-standard:latest
+    container_name: solace-broker
+    platform: linux/amd64
+    shm_size: 2g
+    ulimits:
+      nofile:
+        soft: 1048576
+        hard: 1048576
     ports:
-      - "1521:1521"
-      - "5500:5500"
+      - "8080:8080"
+      - "55554:55555"   # host:container (SMF)
+      - "1443:1443"
+      - "1883:1883"
+      - "5550:5550"
+      - "8008:8008"
+    environment:
+      - username_admin_globalaccesslevel=admin
+      - username_admin_password=admin
+      - system_scaling_maxconnectioncount=100
     volumes:
-      - oracle-free-data:/opt/oracle/oradata
-      # optional, if you want automatic schema creation
-      - ./oracle-init:/container-entrypoint-startdb.d
+      - solace_storage:/var/lib/solace
+    restart: unless-stopped
 
   postgres:
     image: postgres:16
     container_name: postgres
-    environment:
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
     ports:
       - "5432:5432"
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
 
-  # solace-broker:
-  #   platform: linux/amd64
-  #   hostname: solace-broker
-  #   container_name: solace-broker
-  #   image: solace/solace-pubsub-standard:latest
-  #   volumes:
-  #     - solace_data:/var/lib/solace
-  #   shm_size: 2g
-  #   ulimits:
-  #     core: -1
-  #     nofile:
-  #       soft: 2448
-  #       hard: 1048576
-  #   deploy:
-  #     restart_policy:
-  #       condition: on-failure
-  #       max_attempts: 1
-  #   ports:
-  #     - '8008:8008'   # Web transport
-  #     - '1443:1443'   # Web transport TLS
-  #     - "8080:8080"   # Web UI
-  #     - "1883:1883"   # MQTT
-  #     - "55554:55555" # Default messaging port
-  #     - "5550:5550"   # Health Check Listen port
-  #   environment:
-  #     - username_admin_globalaccesslevel=admin
-  #     - username_admin_password=admin
-  #     - system_scaling_maxconnectioncount=100
+  oracle19c:
+    image: container-registry.oracle.com/database/enterprise:19.3.0.0
+    container_name: oracle19c
+    platform: linux/amd64
+    ports:
+      - "1521:1521"
+      - "5500:5500"
+    environment:
+      - ORACLE_PWD=Oradoc_db1
+      - ORACLE_SID=ORCLCDB
+      - ORACLE_PDB=ORCLPDB1
+      - ORACLE_CHARACTERSET=AL32UTF8
+    restart: unless-stopped
 
   jpa-oracle-source:
-    platform: linux/amd64
     image: solace/mi-databases-jpa:2.0.1
     container_name: jpa-oracle-source
+    platform: linux/amd64
     depends_on:
       - oracle19c
       - solace-broker
-    environment:
-      SPRING_CONFIG_LOCATION: file:/app/external/spring/config/
-      SPRING_CLOUD_CONFIG_ENABLED: "false"
-      SPRING_CLOUD_CONFIG_IMPORT_CHECK_ENABLED: "false"
-
-      # Correct Micrometer exporter disable flags
-      MANAGEMENT_DATADOG_METRICS_EXPORT_ENABLED: "false"
-      MANAGEMENT_DYNATRACE_METRICS_EXPORT_ENABLED: "false"
-      MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED: "false"
-      MANAGEMENT_GRAPHITE_METRICS_EXPORT_ENABLED: "false"
-      MANAGEMENT_ATLAS_METRICS_EXPORT_ENABLED: "false"
-
-      # Turn off observations/tracing to avoid ObservationFilter wiring
-      MANAGEMENT_OBSERVATIONS_ENABLED: "false"
-      MANAGEMENT_TRACING_ENABLED: "false"
+    env_file:
+      - .env
     volumes:
       - ./jpa-oracle-config:/app/external/spring/config:ro
+    restart: unless-stopped
 
   jpa-postgres-target:
-    platform: linux/amd64
     image: solace/mi-databases-jpa:2.0.1
     container_name: jpa-postgres-target
+    platform: linux/amd64
     depends_on:
       - postgres
       - solace-broker
+    env_file:
+      - .env
+    restart: unless-stopped
+    ports:
+      - "8091:8090"
+    volumes:
+      - ./jpa-postgres-config:/app/external/spring/config:ro
+      - ./jpa-postgres-config/lib/postgresql-42.7.8.jar:/app/external/jdbc/postgresql-42.7.8.jar:ro
+
     environment:
       SPRING_CONFIG_LOCATION: file:/app/external/spring/config/
       SPRING_CLOUD_CONFIG_ENABLED: "false"
       SPRING_CLOUD_CONFIG_IMPORT_CHECK_ENABLED: "false"
 
-      MANAGEMENT_DATADOG_METRICS_EXPORT_ENABLED: "false"
-      MANAGEMENT_DYNATRACE_METRICS_EXPORT_ENABLED: "false"
-      MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED: "false"
-      MANAGEMENT_GRAPHITE_METRICS_EXPORT_ENABLED: "false"
-      MANAGEMENT_ATLAS_METRICS_EXPORT_ENABLED: "false"
+    entrypoint: >
+      sh -lc '
+        set -e;
 
-      MANAGEMENT_OBSERVATIONS_ENABLED: "false"
-      MANAGEMENT_TRACING_ENABLED: "false"
-    volumes:
-      - ./jpa-postgres-config:/app/external/spring/config:ro
+        # copy the original classpath file (don’t mutate /app in-place)
+        cp /app/jib-classpath-file /tmp/jib-classpath-file;
 
-  oracle-writer:
-    build: ./oracle-writer
-    depends_on: [oracle19c]
+        # append your JDBC jar to the end of the classpath
+        echo "/app/external/jdbc/postgresql-42.7.8.jar" >> /tmp/jib-classpath-file;
 
-  postgres-reporter:
-    build: ./postgres-reporter
-    depends_on: [postgres]
+        # some variants have jib-args-file; use it if present
+        EXTRA_ARGS="";
+        if [ -f /app/jib-args-file ]; then EXTRA_ARGS="@/app/jib-args-file"; fi;
+
+        exec /opt/java/openjdk/bin/java -cp @/tmp/jib-classpath-file $$EXTRA_ARGS @/app/jib-main-class-file
+      '
 
 volumes:
-  oracle-free-data:
-  solace_data:
-
+  solace_storage:
+  postgres_data:

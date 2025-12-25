@@ -1,139 +1,92 @@
 spring:
   application:
     name: jpa-oracle-source
-  datasource:
-    url: jdbc:oracle:thin:@//oracle19c:1521/FREEPDB1
-    username: testuser
-    password: testuser
-    driver-class-name: oracle.jdbc.OracleDriver
+
+  # Prevent Spring Cloud Config import-check failures
   cloud:
+    config:
+      enabled: false
+      import-check:
+        enabled: false
+
     function:
       definition: oracleToSolace
+
     stream:
-      bindings:
-        oracleToSolace-in-0:
-          destination: oracle-source
-          group: oracleSourceGroup
-        oracleToSolace-out-0:
-          destination: oracle-to-solace-topic
+      # Make binder resolution unambiguous
+      defaultBinder: solace
+
       binders:
         solace:
           type: solace
-          defaultCandidate: true
           environment:
             solace:
               java:
-                host: tcp://solace-broker:55555
-                msgVpn: default
-                clientUsername: default
-                clientPassword: default
+                host: ${SOLACE_HOST}
+                msgVpn: ${SOLACE_VPN}
+                clientUsername: ${SOLACE_USERNAME}
+                clientPassword: ${SOLACE_PASSWORD}
 
-connector:
-  databases:
-    source:
-      type: jpa
-      dialect: oracle
-      url: jdbc:oracle:thin:@oracle19c:1521/FREEPDB1   # <── UPDATED for Oracle Free
-      username: testuser                               # or SYSTEM if you prefer
-      password: testuser
-      driverClassName: oracle.jdbc.OracleDriver
-      pool:
-        maxActive: 5
-        maxIdle: 5
+      bindings:
+        # SOURCE connector publishes only (no -in-0 binding)
+        oracleToSolace-out-0:
+          binder: solace
+          destination: db/oracle/test_identification
 
-  workflows:
-    - name: oracle-test-identification
-      description: Stream TEST_IDENTIFICATION rows to Solace
-      source:
-        type: database
-        databaseRef: source
-        table: TEST_IDENTIFICATION
-        polling:
-          intervalMs: 1000
-      target:
-        type: solace
-        destinationType: topic
-        topic: db/oracle/test_identification
+# Database settings for the source connector
+solace-persistence:
+  datasource:
+    driver-class-name: oracle.jdbc.OracleDriver
+    url: ${ORACLE_JDBC_URL}
+    username: ${ORACLE_USERNAME}
+    password: ${ORACLE_PASSWORD}
+    hikari:
+      initializationFailTimeout: -1
+      connection-timeout: 5000
 
-    - name: oracle-test-metrics
-      description: Stream TEST_METRICS rows to Solace
-      source:
-        type: database
-        databaseRef: source
-        table: TEST_METRICS
-        polling:
-          intervalMs: 1000
-      target:
-        type: solace
-        destinationType: topic
-        topic: db/oracle/test_metrics
+  source:
+    dbQueryMode: jpa
+    # polling / batching tuning (safe defaults)
+    sendBatchSize: 1
+    queryMax: 100
+    triggerInterval: 2000
 
+# ✅ IMPORTANT: workflows must live HERE (this is what the connector binds)
 solace:
   connector:
-    # At least one workflow must be enabled
     workflows:
-      0:
+      - name: test_identification
         enabled: true
-      1:
+        source:
+          type: database
+          databaseRef: source
+          table: TEST_IDENTIFICATION
+          polling:
+            intervalMs: 1000
+        target:
+          type: solace
+          destinationType: topic
+          topic: db/oracle/test_identification
+
+      - name: test_metrics
         enabled: true
+        source:
+          type: database
+          databaseRef: source
+          table: TEST_METRICS
+          polling:
+            intervalMs: 1000
+        target:
+          type: solace
+          destinationType: topic
+          topic: db/oracle/test_metrics
 
 management:
-  simple:
-    metrics:
-      export:
-        enabled: true
-
+  observations:
+    enabled: false
+  tracing:
+    enabled: false
   datadog:
     metrics:
       export:
         enabled: false
-
-  dynatrace:
-    metrics:
-      export:
-        enabled: false
-
-  influx:
-    metrics:
-      export:
-        enabled: false
-
-solace-persistence:
-  datasource:
-    driver-class-name: oracle.jdbc.OracleDriver
-    url: jdbc:oracle:thin:@//oracle19c:1521/FREEPDB1
-    username: testuser
-    password: testuser
-    hikari:
-      initializationFailTimeout: -1
-      connection-timeout: 5000
-  jpa:
-    hibernate:
-      ddl-auto: none
-    show-sql: false
-    database: oracle
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.Oracle10gDialect
-        jdbc:
-          batch_size: 100
-        order_updates: true
-        generate_statistics: false
-  source:
-    dbQueryMode: jpa
-    sendBatchSize: 1
-    sendPoolSize: 100
-    queryMax: 2
-    maxDbRetry: 3
-    triggerInterval: 2000
-    retryInterval: 10
-    enableRetry: true
-    retryCount: 3
-    enableBufferedJpaBatch: true
-    bufferWaitSeconds: 5
-    enableTrackingId: true
-    enableDatabaseTimestamp: true
-    enableConnectorTimestamp: true
-    enableBenchmarkInfo: true
-    skipMismatchError: false
-    indicatorFlag: true
