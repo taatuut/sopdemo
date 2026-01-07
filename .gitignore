@@ -214,3 +214,6 @@ pubsubplus-connector-database-2.0.1-User-Guide.pdf
 log.txt
 *.zip
 jpa-postgres-config/lib/postgresql-42.7.8.jar
+images/*.png
+images/*.jpg
+tree.txt

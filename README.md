@@ -1,11 +1,9 @@
 # sopdemo
-
 A Oracle 19c ⇄ Solace ⇄ PostgreSQL Demo
 
 End-to-end demo showing how to stream data from an **Oracle 19c** source database into **PostgreSQL** via a **Solace PubSub+ Standard** event broker and the **Solace Databases (JPA) Micro‑Integration**, with Python services producing and consuming data.
 
-## 1. What You Get
-
+## What You Get
 This repo contains:
 
 - `docker-compose.yml` – brings up:
@@ -33,8 +31,8 @@ This repo contains:
 > The Solace Databases (JPA) Micro‑Integration container image is **not** on Docker Hub.  
 > You must download current version `pubsubplus-connector-database-2.0.1-image.tar` from https://solace.com/integration-hub/databases-jpa/ at the **Solace Integration Hub** and `docker load` it locally before using this demo, see documentation `pubsubplus-connector-database-2.0.1-User-Guide.pdf`.
 
-## 2. High‑Level Architecture
-
+## High‑Level Architecture
+TODO: swap order JPA MI Oracle and Solace PubSub+ Standard, arrow from JPA MI Oracle to Oracle 19c DB
 ```text
 +-------------------+        +----------------------------+        +---------------------+
 |  Oracle 19c DB    |        |  Solace PubSub+ Standard   |        |  PostgreSQL DB      |
@@ -53,7 +51,7 @@ This repo contains:
           |                        db/oracle/test_metrics                     |
           |                                  v                                |
 +---------+---------+        +---------------+------------+        +----------+----------+
-| Python Writer    |  --->   |  Queues on Solace          |  --->  |  JPA MI:           |
+| Python Writer    |         |  Queues on Solace          |  --->  |  JPA MI:           |
 | (oracle-writer)  |         |  Q.ORACLE.TEST_IDENT...    |       |  Solace → Postgres |
 +------------------+         |  Q.ORACLE.TEST_METRICS     |        +----------+---------+
                              +----------------------------+                   |
@@ -64,110 +62,38 @@ This repo contains:
                                                                      +-----------------+
 ```
 
-## 3. Prerequisites
-
+## Prerequisites
 This repo provides a `docker-compose.yml` file to run demo as a standalone setup. You can use existing (Cloud) components like Oracle, PostgreSQL database and Solace broker by changing environment parameters. Docker Desktop can convert your Compose file into Kubernetes manifests and deploy them to the Kubernetes cluster.
 
 You’ll need:
 
-1. **Docker Desktop** or similar (`podman`, `colima` with **docker-compose** installed).
+1. **Docker Desktop** or similar alternatives (`podman`, `colima` with **docker-compose** installed, might hit some caveats).
 2. Ability to log in to **Oracle Container Registry** and accept the Oracle Database 19c image license.
 3. Access to the **Solace Databases (JPA) Micro‑Integration** container image:
    - Download from Solace Integration Hub (Databases JPA connector).
    - You should end up with a `.tar` image file which you then load into Docker.
 4. Internet access for pulling the Postgres and Solace broker images (once).
 
-_Optional_
+## Repository structure
 
-When not using Docker Desktop, can work with `colima`. Note that some caveats apply.
-
-### Colima
-
-```sh
-brew install colima lima-additional-guestagents docker qemu
-```
-
-~~Need to start colima with `--arch x86_64` for Oracle.~~
-
-ARM Oracle support means no x86 emulation needed.
-
-```sh
-colima start --runtime docker --cpu 6 --memory 12 --disk 100 --network-address
-```
-
-If already started without run:
-
-```sh
-colima stop
-colima delete
-<colima start command>
-limactl info | jq .guestAgents
-docker context use colima
-docker info | grep -i architecture
-docker context ls
-```
-
-On Apple Silicon (M1/M2/M3), Oracle Database is not available natively. The official 19c Enterprise image is amd64-only, and running it under Docker Desktop’s built-in emulation (qemu/Rosetta) is known to cause exactly these kinds of failures: PMON not starting, ORA-01034 during DBCA, etc.
-
-📌 Final note: will never get Oracle 19c to run inside Colima on Apple Silicon — SIGILL during DBCA makes it impossible.
-
-On macOS M use ARM-native “Oracle Free 23ai” image like `gvenzl/oracle-free`.
-
-### Uninstall
-
-```sh
-colima stop --force
-colima delete
-limactl stop --all
-limactl delete --all
-pkill -f colima
-pkill -f limactl
-osascript -e 'quit app "Docker"'
-osascript -e 'quit app "Podman Desktop"'  
-rm -rf ~/.docker
-rm -rf ~/.colima
-rm -rf ~/.lima
-sudo rm -rf /Library/Containers/com.docker.docker
-sudo rm -rf /Library/Group\ Containers/group.com.docker
-brew uninstall --cask docker-desktop podman-desktop
-brew uninstall colima docker docker-completion docker-compose docker-credential-helper lima lima-additional-guestagents
-brew list | grep -E 'docker|lima|colima'
-brew list --cask | grep -E 'docker|podman'
-ps aux | grep -E 'lima|colima|podman' | grep -v grep
-ls ~/.lima ~/.colima 2>/dev/null
-```
-
-## 4. Directory Structure
-
-After unpacking / cloning:
+After unpacking/cloning:
 
 ```text
-sopdemo/
-├─ README.md
-├─ docker-compose.yml
-├─ oracle-init/
-│  └─ 01_create_schema.sql
-├─ postgres-init/
-│  └─ 01_create_schema.sql
-├─ jpa-oracle-config/
-│  └─ application.yml
-├─ jpa-postgres-config/
-│  └─ application.yml
-├─ oracle-writer/
-│  ├─ Dockerfile
-│  ├─ main.py
-│  └─ requirements.txt
-└─ postgres-reporter/
-   ├─ Dockerfile
-   ├─ main.py
-   └─ requirements.txt
+sopdemo
+├── images
+├── jpa-oracle-config
+├── jpa-postgres-config
+│   └── lib
+├── oracle-init
+├── oracle-writer
+├── postgres-init
+└── postgres-reporter
 ```
+(source: `tree ../sopdemo -d > tree.txt`)
 
-## 5. One‑Time Preparation
+## One‑Time Preparation
 
-### 5.1. Download Oracle 19c Database Image
-
-_Only if not on macOS_
+### Download Oracle 19c Database Image
 
 1. Go to Oracle Container Registry https://container-registry.oracle.com/ (you must have an Oracle account).
 2. Accept the license for **Oracle Database Enterprise Edition** 19c.
@@ -180,7 +106,12 @@ docker pull container-registry.oracle.com/database/enterprise:19.3.0.0
 
 This is the image used by `oracle19c` in `docker-compose.yml`.
 
-### 5.2. Download the Solace Databases (JPA) Micro‑Integration Image
+NOTE: Docker Desktop (or similar) must be running the docker daemon. If not you might error message like:
+```sh
+failed to connect to the docker API at unix:///Users/emilzegers/.docker/run/docker.sock; check if the path is correct and if the daemon is running: dial unix /Users/emilzegers/.docker/run/docker.sock: connect: no such file or directory
+```
+
+### Download the Solace Databases (JPA) Micro‑Integration Image
 
 1. Go to the Solace Integration Hub → **Databases (JPA)**.
 2. Download the **container image** for the JPA micro‑integration.
@@ -192,11 +123,22 @@ docker images
 docker tag <IMAGE_ID> solace/mi-databases-jpa:2.0.1
 ```
 
-Replace `<IMAGE_ID>` with the ID from `docker images`.
+Replace `<IMAGE_ID>` with the ID from `docker images`, for example:
+
+```sh
+docker images
+                                                         i Info →   U  In Use
+IMAGE                        ID             DISK USAGE   CONTENT SIZE   EXTRA
+container-registry.oracle.com/database/enterprise:19.3.0.0
+                             291fd8c7958b       8.32GB             0B        
+solace/solace-pubsub-connector-database:2.0.1
+                             ef614b5c4b57        291MB             0B        
+emilzegers@ezSolace sopdemo % docker tag ef614b5c4b57 solace/mi-databases-jpa:2.0.1
+```
 
 If you use a different tag, update `docker-compose.yml` accordingly.
 
-## 6. Bring Up the Core Stack
+## Bring Up the Core Stack
 
 Ensure you are in the root of the project:
 
@@ -204,7 +146,7 @@ Ensure you are in the root of the project:
 cd <path/to/sopdemo>
 ```
 
-### 6.1. Build the Python Services
+### Build the Python Services
 
 NOTE: depending on OS and Docker version you might need to use either `docker compose` or `docker-compose`
 
@@ -800,4 +742,62 @@ ALTER SYSTEM SET local_listener='' SCOPE=BOTH;
 Completed:    ALTER PLUGGABLE DATABASE ORCLPDB1 SAVE STATE
 
 XDB initialized.
+```
+
+## Appendix colima
+
+### Colima
+
+```sh
+brew install colima lima-additional-guestagents docker qemu
+```
+
+~~Need to start colima with `--arch x86_64` for Oracle.~~
+
+ARM Oracle support means no x86 emulation needed.
+
+```sh
+colima start --runtime docker --cpu 6 --memory 12 --disk 100 --network-address
+```
+
+If already started without run:
+
+```sh
+colima stop
+colima delete
+<colima start command>
+limactl info | jq .guestAgents
+docker context use colima
+docker info | grep -i architecture
+docker context ls
+```
+
+On Apple Silicon (M1/M2/M3), Oracle Database is not available natively. The official 19c Enterprise image is amd64-only, and running it under Docker Desktop’s built-in emulation (qemu/Rosetta) is known to cause these kinds of failures: PMON not starting, ORA-01034 during DBCA, etc.
+
+📌 Final note: will never get Oracle 19c to run inside Colima on Apple Silicon — SIGILL during DBCA makes it impossible.
+
+On macOS M use ARM-native “Oracle Free 23ai” image like `gvenzl/oracle-free`.
+
+### Uninstall
+
+```sh
+colima stop --force
+colima delete
+limactl stop --all
+limactl delete --all
+pkill -f colima
+pkill -f limactl
+osascript -e 'quit app "Docker"'
+osascript -e 'quit app "Podman Desktop"'  
+rm -rf ~/.docker
+rm -rf ~/.colima
+rm -rf ~/.lima
+sudo rm -rf /Library/Containers/com.docker.docker
+sudo rm -rf /Library/Group\ Containers/group.com.docker
+brew uninstall --cask docker-desktop podman-desktop
+brew uninstall colima docker docker-completion docker-compose docker-credential-helper lima lima-additional-guestagents
+brew list | grep -E 'docker|lima|colima'
+brew list --cask | grep -E 'docker|podman'
+ps aux | grep -E 'lima|colima|podman' | grep -v grep
+ls ~/.lima ~/.colima 2>/dev/null
 ```
