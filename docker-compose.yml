@@ -63,6 +63,11 @@ services:
       - .env
     volumes:
       - ./jpa-oracle-config:/app/external/spring/config:ro
+
+    environment:
+      SPRING_CONFIG_LOCATION: "optional:classpath:/,file:/app/external/spring/config/"
+      SPRING_CLOUD_CONFIG_ENABLED: "false"
+      SPRING_CLOUD_CONFIG_IMPORT_CHECK_ENABLED: "false"
     restart: unless-stopped
 
   jpa-postgres-target:

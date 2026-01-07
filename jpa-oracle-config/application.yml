@@ -1,21 +1,16 @@
 spring:
   application:
     name: jpa-oracle-source
-
-  # Prevent Spring Cloud Config import-check failures
+  autoconfigure:
+    # exclude:
+    #   - com.solace.connector.core.config.WorkflowHookAutoConfiguration
   cloud:
-    config:
+    vault:
       enabled: false
-      import-check:
-        enabled: false
-
     function:
-      definition: oracleToSolace
-
+      definition: setupWorkflow # oracleToSolace
     stream:
-      # Make binder resolution unambiguous
       defaultBinder: solace
-
       binders:
         solace:
           type: solace
@@ -26,14 +21,17 @@ spring:
                 msgVpn: ${SOLACE_VPN}
                 clientUsername: ${SOLACE_USERNAME}
                 clientPassword: ${SOLACE_PASSWORD}
-
       bindings:
-        # SOURCE connector publishes only (no -in-0 binding)
         oracleToSolace-out-0:
           binder: solace
           destination: db/oracle/test_identification
+          producer:
+            useNativeEncoding: ""
+    # config:
+    #   enabled: false
+    #   import-check:
+    #     enabled: false
 
-# Database settings for the source connector
 solace-persistence:
   datasource:
     driver-class-name: oracle.jdbc.OracleDriver
@@ -90,3 +88,32 @@ management:
     metrics:
       export:
         enabled: false
+  influx:
+    metrics:
+      export:
+        enabled: false
+  dynatrace:
+    metrics:
+      export:
+        enabled: false
+  otlp:
+    metrics:
+      export:
+        enabled: false
+  metrics:
+    export:
+      influx:
+        enabled: false
+      dynatrace:
+        enabled: false
+      otlp:
+        enabled: false
+
+debug: true
+logging:
+  level:
+    org.springframework.cloud.stream.binder: DEBUG
+    org.springframework.cloud.stream.binding: DEBUG
+    org.springframework.cloud.stream.config: DEBUG
+    org.springframework.boot.context.config: DEBUG
+    org.springframework.core.env: DEBUG

@@ -2,33 +2,26 @@ import os
 import time
 import oracledb
 
-
-def dsn_from_env() -> str:
-    """
-    Prefer ORACLE_JDBC_URL from .env (jdbc:oracle:thin:@//host:port/service)
-    and convert to python-oracledb EZConnect format (host:port/service).
-    """
-    jdbc = os.getenv("ORACLE_JDBC_URL", "").strip()
-    if jdbc.startswith("jdbc:oracle:thin:@//"):
-        return jdbc.replace("jdbc:oracle:thin:@//", "", 1)
-
-    # fallback env var if you ever add it
-    dsn = os.getenv("ORACLE_DSN", "").strip()
-    if dsn:
-        return dsn
-
-    # final fallback
-    return "oracle19c:1521/ORCLPDB1"
-
-
-USER = os.getenv("ORACLE_USERNAME", "testuser")
-PASSWORD = os.getenv("ORACLE_PASSWORD", "Oradoc_db1")
-DSN = dsn_from_env()
-
+USER = "testuser"
+PASSWORD = "Oradoc_db1"
+DSN = "oracle19c:1521/ORCLPDB1"
 
 def write_once():
     with oracledb.connect(user=USER, password=PASSWORD, dsn=DSN) as conn:
         with conn.cursor() as cur:
+            cur.execute("select user from dual")
+            print("DB user:", cur.fetchone()[0])
+
+            cur.execute("select sys_context('USERENV','CON_NAME') from dual")
+            print("CON_NAME:", cur.fetchone()[0])
+
+            cur.execute("""
+                select owner, table_name
+                from all_tables
+                where table_name in ('TEST_IDENTIFICATION','TEST_METRICS')
+                order by owner, table_name
+            """)
+            print("Tables visible:", cur.fetchall())
             # Insert into test_identification and fetch generated id
             new_id = cur.var(oracledb.NUMBER)
 
@@ -42,7 +35,8 @@ def write_once():
                 new_id=new_id,
             )
 
-            test_id = int(new_id.getvalue())
+            val = new_id.getvalue()
+            test_id = int(val[0] if isinstance(val, list) else val)
 
             # Insert corresponding metric referencing the test_id
             cur.execute(
