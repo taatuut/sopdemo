@@ -1,14 +1,19 @@
 spring:
   application:
     name: jpa-oracle-source
+
   autoconfigure:
-    # exclude:
-    #   - com.solace.connector.core.config.WorkflowHookAutoConfiguration
+    exclude:
+      - com.solace.connector.core.config.WorkflowHookAutoConfiguration
+      - com.solace.connector.core.config.JCSMPCompatibilityAutoConfiguration
+
   cloud:
     vault:
       enabled: false
+
     function:
-      definition: setupWorkflow # oracleToSolace
+      definition: mapPayloads
+
     stream:
       defaultBinder: solace
       binders:
@@ -21,16 +26,6 @@ spring:
                 msgVpn: ${SOLACE_VPN}
                 clientUsername: ${SOLACE_USERNAME}
                 clientPassword: ${SOLACE_PASSWORD}
-      bindings:
-        oracleToSolace-out-0:
-          binder: solace
-          destination: db/oracle/test_identification
-          producer:
-            useNativeEncoding: ""
-    # config:
-    #   enabled: false
-    #   import-check:
-    #     enabled: false
 
 solace-persistence:
   datasource:
@@ -41,15 +36,12 @@ solace-persistence:
     hikari:
       initializationFailTimeout: -1
       connection-timeout: 5000
-
   source:
     dbQueryMode: jpa
-    # polling / batching tuning (safe defaults)
     sendBatchSize: 1
     queryMax: 100
     triggerInterval: 2000
 
-# ✅ IMPORTANT: workflows must live HERE (this is what the connector binds)
 solace:
   connector:
     workflows:
