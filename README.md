@@ -156,7 +156,7 @@ docker-compose build oracle-writer postgres-reporter
 
 If necessary check for running containers (starting with `docker ps -a `) to avoid any port conflicts.
 
-### 6.2. Start Databases and Broker
+### Start Databases and Broker
 
 ```sh
 docker-compose up -d oracle19c postgres solace-broker
@@ -179,7 +179,9 @@ DATABASE IS READY TO USE!
 #########################
 ```
 
-### 6.3. Start JPA Micro‑Integration Instances
+TIP: DBeaver to easily check Oracle and PostgreSQL database connectivity and schema creation (https://dbeaver.io/download/ or `brew install --cask dbeaver-community`).
+
+### Start JPA Micro‑Integration Instances
 
 After Oracle, Postgres, and the Solace broker are running:
 
@@ -192,7 +194,7 @@ These will read their configuration from:
 - `jpa-oracle-config/application.yml` (Oracle → Solace)
 - `jpa-postgres-config/application.yml` (Solace → Postgres)
 
-### 6.4. Verify Solace Broker
+### Verify Solace Broker
 
 Open PubSub+ Manager in your browser:
 
@@ -211,9 +213,9 @@ If not present, you can quickly create them in the UI (or via CLI/SEMP) and add 
 - `Q.ORACLE.TEST_IDENTIFICATION` → `db/oracle/test_identification`
 - `Q.ORACLE.TEST_METRICS` → `db/oracle/test_metrics`
 
-## 7. Start the Demo Data Flow
+## Start the Demo Data Flow
 
-### 7.1. Start the Oracle Writer
+### Start the Oracle Writer
 
 ```sh
 docker-compose up -d oracle-writer
@@ -251,7 +253,7 @@ Now, the full flow is:
 View the reporter logs:
 
 ```sh
-docker logs -f postgres-reporter
+docker logs -f sopdemo-postgres-reporter
 ```
 
 You should see lines similar to:

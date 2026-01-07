@@ -49,6 +49,8 @@ services:
       - ORACLE_PDB=ORCLPDB1
       - ORACLE_CHARACTERSET=AL32UTF8
     restart: unless-stopped
+    volumes:
+      - ./oracle-init:/opt/oracle/scripts/setup
 
   jpa-oracle-source:
     image: solace/mi-databases-jpa:2.0.1
@@ -100,6 +102,16 @@ services:
 
         exec /opt/java/openjdk/bin/java -cp @/tmp/jib-classpath-file $$EXTRA_ARGS @/app/jib-main-class-file
       '
+
+  oracle-writer:
+    build: ./oracle-writer
+    depends_on: [oracle19c]
+    env_file:
+      - .env
+
+  postgres-reporter:
+    build: ./postgres-reporter
+    depends_on: [postgres]
 
 volumes:
   solace_storage:
