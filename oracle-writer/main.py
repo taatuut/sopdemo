@@ -1,19 +1,32 @@
 import os
 import time
 import oracledb
+from datetime import datetime, timezone
 
-USER = "testuser"
-PASSWORD = "Oradoc_db1"
-DSN = "oracle19c:1521/ORCLPDB1"
+USER = os.environ.get("ORACLE_USERNAME")
+PASS = os.environ.get("ORACLE_PWD")
+JDBC = "jdbc:oracle:thin:@//"
+DSN = os.environ.get("ORACLE_JDBC_URL").replace(JDBC, "")
+
+def log_info(message: str, level: str = "INFO"):
+    """
+    Print log message with ISO 8601 / RFC 3339 timestamp and log level
+
+    Examples:
+    2026-01-10T14:32:05.123Z INFO DB user: TESTUSER
+    2026-01-10T14:32:05.123Z ERROR Connection failed
+    """
+    ts = datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+    print(f"{ts} {level.upper()} {message}", flush=True)
 
 def write_once():
-    with oracledb.connect(user=USER, password=PASSWORD, dsn=DSN) as conn:
+    with oracledb.connect(user=USER, password=PASS, dsn=DSN) as conn:
         with conn.cursor() as cur:
             cur.execute("select user from dual")
-            print("DB user:", cur.fetchone()[0])
+            log_info(f"DB user: {cur.fetchone()[0]}")
 
             cur.execute("select sys_context('USERENV','CON_NAME') from dual")
-            print("CON_NAME:", cur.fetchone()[0])
+            log_info(f"CON_NAME: {cur.fetchone()[0]}")
 
             cur.execute("""
                 select owner, table_name
@@ -21,7 +34,8 @@ def write_once():
                 where table_name in ('TEST_IDENTIFICATION','TEST_METRICS')
                 order by owner, table_name
             """)
-            print("Tables visible:", cur.fetchall())
+            log_info(f"Tables visible: {cur.fetchall()}")
+
             # Insert into test_identification and fetch generated id
             new_id = cur.var(oracledb.NUMBER)
 
@@ -50,7 +64,7 @@ def write_once():
             )
 
             conn.commit()
-            print(f"Inserted test_id={test_id}")
+            log_info(f"Inserted test_id={test_id}")
 
 
 if __name__ == "__main__":

@@ -109,14 +109,22 @@ services:
       '
 
   oracle-writer:
+    container_name: oracle-writer
     build: ./oracle-writer
     depends_on: [oracle19c]
+    environment:
+        - PYTHONUNBUFFERED=1
     env_file:
       - .env
 
   postgres-reporter:
+    container_name: postgres-reporter
     build: ./postgres-reporter
     depends_on: [postgres]
+    environment:
+        - PYTHONUNBUFFERED=1
+    env_file:
+      - .env
 
 volumes:
   solace_storage:

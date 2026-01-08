@@ -78,7 +78,7 @@ solace-persistence:
     driver-class-name: oracle.jdbc.OracleDriver
     url: ${ORACLE_JDBC_URL}
     username: ${ORACLE_USERNAME}
-    password: ${ORACLE_PASSWORD}
+    password: ${ORACLE_PWD}
     hikari:
       initializationFailTimeout: -1
       connection-timeout: 5000
