@@ -2,20 +2,18 @@ spring:
   application:
     name: jpa-oracle-source
 
-  autoconfigure:
-    exclude:
-      - com.solace.connector.core.config.WorkflowHookAutoConfiguration
-      - com.solace.connector.core.config.JCSMPCompatibilityAutoConfiguration
-
   cloud:
     vault:
       enabled: false
 
+    # IMPORTANT: keep this set to avoid the connector framework hitting null definition paths
+    # and to ensure the workflow setup function is part of the catalog.
     function:
-      definition: mapPayloads
+      definition: setupWorkflow;mapPayloads
 
     stream:
       defaultBinder: solace
+
       binders:
         solace:
           type: solace
@@ -27,6 +25,69 @@ spring:
                 clientUsername: ${SOLACE_USERNAME}
                 clientPassword: ${SOLACE_PASSWORD}
 
+        # DB binder used by the connector to poll/query the DB
+        solace-db:
+          type: db
+          defaultCandidate: false
+
+      bindings:
+        # Workflow 0: TEST_IDENTIFICATION (DB -> Solace)
+        input-0:
+          destination: TEST_IDENTIFICATION
+          binder: solace-db
+          consumer:
+            batch-mode: true
+            concurrency: 1
+
+        output-0:
+          destination: db/oracle/test_identification
+          binder: solace
+
+        # Workflow 1: TEST_METRICS (DB -> Solace)
+        input-1:
+          destination: TEST_METRICS
+          binder: solace-db
+          consumer:
+            batch-mode: true
+            concurrency: 1
+
+        output-1:
+          destination: db/oracle/test_metrics
+          binder: solace
+
+
+# Solace broker connection (framework + management session)
+solace:
+  java:
+    host: ${SOLACE_HOST}
+    msgVpn: ${SOLACE_VPN}
+    clientUsername: ${SOLACE_USERNAME}
+    clientPassword: ${SOLACE_PASSWORD}
+    connect-retries: -1
+    reconnect-retries: -1
+
+  connector:
+    # CRITICAL: indexed workflows (not a YAML list)
+    workflows:
+      0:
+        enabled: true
+      1:
+        enabled: true
+
+    management:
+      leader-election:
+        mode: standalone
+      session:
+        host: ${SOLACE_HOST}
+        msgVpn: ${SOLACE_VPN}
+        clientUsername: ${SOLACE_USERNAME}
+        clientPassword: ${SOLACE_PASSWORD}
+
+    security:
+      enabled: false
+
+
+# DB connection used by the DB binder
 solace-persistence:
   datasource:
     driver-class-name: oracle.jdbc.OracleDriver
@@ -36,40 +97,13 @@ solace-persistence:
     hikari:
       initializationFailTimeout: -1
       connection-timeout: 5000
+
   source:
     dbQueryMode: jpa
     sendBatchSize: 1
     queryMax: 100
     triggerInterval: 2000
 
-solace:
-  connector:
-    workflows:
-      - name: test_identification
-        enabled: true
-        source:
-          type: database
-          databaseRef: source
-          table: TEST_IDENTIFICATION
-          polling:
-            intervalMs: 1000
-        target:
-          type: solace
-          destinationType: topic
-          topic: db/oracle/test_identification
-
-      - name: test_metrics
-        enabled: true
-        source:
-          type: database
-          databaseRef: source
-          table: TEST_METRICS
-          polling:
-            intervalMs: 1000
-        target:
-          type: solace
-          destinationType: topic
-          topic: db/oracle/test_metrics
 
 management:
   observations:
@@ -104,8 +138,9 @@ management:
 debug: true
 logging:
   level:
+    root: INFO
+    com.solace.connector.core: DEBUG
+    com.solace.spring.cloud.stream.binders.db: DEBUG
+    org.springframework.cloud.stream: DEBUG
     org.springframework.cloud.stream.binder: DEBUG
-    org.springframework.cloud.stream.binding: DEBUG
     org.springframework.cloud.stream.config: DEBUG
-    org.springframework.boot.context.config: DEBUG
-    org.springframework.core.env: DEBUG
