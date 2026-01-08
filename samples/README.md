@@ -1,0 +1,1 @@
+File `application.yml` comes from folder `pubsubplus-connector-database-2.0.1/samples/config/application.yml`from downloaded zip `pubsubplus-connector-database-2.0.1-release.zip`.

@@ -210,7 +210,6 @@ __marimo__/
 .idea/
 .DS_Store
 pubsubplus-connector-database-2.0.1-image.tar
-pubsubplus-connector-database-2.0.1-User-Guide.pdf
 log.txt
 *.zip
 jpa-postgres-config/lib/postgresql-42.7.8.jar
