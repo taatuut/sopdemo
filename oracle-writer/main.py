@@ -9,13 +9,6 @@ JDBC = "jdbc:oracle:thin:@//"
 DSN = os.environ.get("ORACLE_JDBC_URL").replace(JDBC, "")
 
 def log_info(message: str, level: str = "INFO"):
-    """
-    Print log message with ISO 8601 / RFC 3339 timestamp and log level
-
-    Examples:
-    2026-01-10T14:32:05.123Z INFO DB user: TESTUSER
-    2026-01-10T14:32:05.123Z ERROR Connection failed
-    """
     ts = datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
     print(f"{ts} {level.upper()} {message}", flush=True)
 

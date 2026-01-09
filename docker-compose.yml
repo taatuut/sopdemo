@@ -28,12 +28,11 @@ services:
     container_name: postgres
     ports:
       - "5432:5432"
-    environment:
-      - POSTGRES_DB=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+    env_file:
+      - .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d
     restart: unless-stopped
 
   oracle19c:
@@ -43,14 +42,16 @@ services:
     ports:
       - "1521:1521"
       - "5500:5500"
+    env_file:
+      - .env
     environment:
       - ORACLE_PWD=Oradoc_db1
       - ORACLE_SID=ORCLCDB
       - ORACLE_PDB=ORCLPDB1
       - ORACLE_CHARACTERSET=AL32UTF8
-    restart: unless-stopped
     volumes:
       - ./oracle-init:/opt/oracle/scripts/setup
+    restart: unless-stopped
 
   jpa-oracle-source:
     image: solace/mi-databases-jpa:2.0.1
@@ -63,11 +64,10 @@ services:
       - .env
     volumes:
       - ./jpa-oracle-config:/app/external/spring/config:ro
-
-    environment:
-      SPRING_CONFIG_LOCATION: "optional:classpath:/,file:/app/external/spring/config/"
-      SPRING_CLOUD_CONFIG_ENABLED: "false"
-      SPRING_CLOUD_CONFIG_IMPORT_CHECK_ENABLED: "false"
+    # environment:
+    #   SPRING_CONFIG_LOCATION: "optional:classpath:/,file:/app/external/spring/config/"
+    #   SPRING_CLOUD_CONFIG_ENABLED: "false"
+    #   SPRING_CLOUD_CONFIG_IMPORT_CHECK_ENABLED: "false"
     restart: unless-stopped
 
   jpa-postgres-target:
