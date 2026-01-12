@@ -47,6 +47,21 @@ solace:
       enabled: false
 
     workflows:
+          # workflow definition using environment variables from .env file, uncomment when needed
+          # - name: ${WORKFLOW_NAME}
+          #   enabled: true
+          #   source:
+          #     type: database
+          #     databaseRef: source
+          #     table: ${WORKFLOW_DB_TABLE}
+          #     polling:
+          #       intervalMs: 1000
+          #   target:
+          #     type: solace
+          #     destinationType: topic
+          #     topic: ${WORKFLOW_SOLACE_TOPIC}
+
+          # demo workflow definitions included for reference, comment when not needed
           - name: test_identification
             enabled: true
             source:
