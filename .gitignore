@@ -211,9 +211,13 @@ __marimo__/
 .DS_Store
 pubsubplus-connector-database-2.0.1-image.tar
 log.txt
-*.zip
 jpa-postgres-config/lib/postgresql-42.7.8.jar
 images/*.png
 images/*.jpg
 tree.txt
 pubsubplus-connector-database-2.0.2-SNAPSHOT.jar
+jpa-oracle-config.zip
+jpa-postgres-config.zip
+jpa-oracle-source-package/application.yml
+jpa-oracle-source-package/docker-compose.yml
+jpa-oracle-source-package/sample.env

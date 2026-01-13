@@ -71,7 +71,7 @@ services:
     #   SPRING_CLOUD_CONFIG_ENABLED: "false"
     #   SPRING_CLOUD_CONFIG_IMPORT_CHECK_ENABLED: "false"
     restart: unless-stopped
-#BO jpa-oracle-source
+#EO jpa-oracle-source
 
   jpa-postgres-target:
     image: solace/mi-databases-jpa:2.0.1
