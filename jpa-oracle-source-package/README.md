@@ -34,6 +34,10 @@ Commands:
 todo
 ```
 
+## Configure
+
+Add relevant variables to `.env`.
+
 ## Run
 
 Convert to Kubernetes and deploy.
