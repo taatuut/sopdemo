@@ -1,4 +1,6 @@
+#BO services
 services:
+#EO services
   solace-broker:
     image: solace/solace-pubsub-standard:latest
     container_name: solace-broker
@@ -52,6 +54,7 @@ services:
       - ./oracle-init:/opt/oracle/scripts/setup
     restart: unless-stopped
 
+#BO jpa-oracle-source
   jpa-oracle-source:
     image: solace/mi-databases-jpa:2.0.1
     container_name: jpa-oracle-source
@@ -68,6 +71,7 @@ services:
     #   SPRING_CLOUD_CONFIG_ENABLED: "false"
     #   SPRING_CLOUD_CONFIG_IMPORT_CHECK_ENABLED: "false"
     restart: unless-stopped
+#BO jpa-oracle-source
 
   jpa-postgres-target:
     image: solace/mi-databases-jpa:2.0.1
