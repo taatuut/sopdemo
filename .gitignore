@@ -224,3 +224,5 @@ jpa-oracle-source-package/sample.env
 pubsubplus-connector-database-2.0.1-release.zip
 pubsubplus-connector-database-2.0.1/*
 pubsubplus-connector-database-2.0.2-SNAPSHOT.txt
+TEST_SOURCE_JPA_RI_V03.zip
+TEST_SOURCE_JPA_RI_V03/*
