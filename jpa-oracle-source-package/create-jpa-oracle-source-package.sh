@@ -3,27 +3,7 @@ set -euo pipefail
 
 # -----------------------------------------------------------------------------
 # create-jpa-oracle-source-package.sh
-#
 # Creates jpa-oracle-source-package.zip inside ./jpa-oracle-source-package
-# by copying:
-#  - tagged sections from ../sample.env -> ./sample.env   (NOT .env)
-#  - ../jpa-oracle-config/application.yml -> ./application.yml
-#  - tagged sections from ../docker-compose.yml -> ./docker-compose.yml
-#
-# Tag blocks are delimited by:
-#   BO <tag>   (or commented variants: # BO <tag>, #BO <tag>)
-#   ...
-#   EO <tag>   (or commented variants: # EO <tag>, #EO <tag>)
-#
-# docker-compose.yml tags used:
-#   - services
-#   - jpa-oracle-source
-#
-# sample.env tags used:
-#   - ORACLE
-#   - SOLACE
-#   - DATADOG
-#   - WORKFLOW
 # -----------------------------------------------------------------------------
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
