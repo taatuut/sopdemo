@@ -221,3 +221,6 @@ jpa-postgres-config.zip
 jpa-oracle-source-package/application.yml
 jpa-oracle-source-package/docker-compose.yml
 jpa-oracle-source-package/sample.env
+pubsubplus-connector-database-2.0.1-release.zip
+pubsubplus-connector-database-2.0.1/*
+pubsubplus-connector-database-2.0.2-SNAPSHOT.txt

@@ -1,18 +1,18 @@
-spring:
-  application:
-    name: jpa-oracle-source
+server:
+  port: 8080
 
-  cloud:
-    vault:
+spring:
+  config:
+    import-check:
       enabled: false
 
-    # IMPORTANT: keep this set to avoid the connector framework hitting null definition paths
-    # and to ensure the workflow setup function is part of the catalog.
+  cloud:
     function:
-      definition: mapPayloads
+      definition: connector
 
     stream:
       defaultBinder: solace
+
       binders:
         solace:
           type: solace
@@ -20,73 +20,63 @@ spring:
             solace:
               java:
                 host: ${SOLACE_HOST}
-                msgVpn: ${SOLACE_VPN}
-                clientUsername: ${SOLACE_USERNAME}
-                clientPassword: ${SOLACE_PASSWORD}
+                msg-vpn: ${SOLACE_VPN}
+                client-username: ${SOLACE_USERNAME}
+                client-password: ${SOLACE_PASSWORD}
+                connect-retries: -1
+                reconnect-retries: -1
+
+        db:
+          type: solace-db
+
+      bindings:
+        input-0:
+          binder: db
+          destination: TEST_IDENTIFICATION
+
+        output-0:
+          binder: solace
+          destination: db/oracle/test_identification
+
+    config:
+      import-check:
+        enabled: false
+    # vault:
+    #   enabled: false
 
 solace:
-  java:
-    host: ${SOLACE_HOST}
-    msgVpn: ${SOLACE_VPN}
-    clientUsername: ${SOLACE_USERNAME}
-    clientPassword: ${SOLACE_PASSWORD}
-    connect-retries: -1
-    reconnect-retries: -1
-
+  # java:
+  #   host: ${SOLACE_HOST}
+  #   msg-vpn: ${SOLACE_VPN}
+  #   client-username: ${SOLACE_USERNAME}
+  #   client-password: ${SOLACE_PASSWORD}
   connector:
-    management:
-      leader-election:
-        mode: standalone
-      session:
-        host: ${SOLACE_HOST}
-        msgVpn: ${SOLACE_VPN}
-        clientUsername: ${SOLACE_USERNAME}
-        clientPassword: ${SOLACE_PASSWORD}
+    workflows:
+      0:
+        enabled: true
+        source:
+          type: database
+          databaseRef: source
+          table: TEST_IDENTIFICATION
+          polling:
+            intervalMs: 1000
+        target:
+          type: solace
+          destinationType: topic
+          topic: db/oracle/test_identification
 
     security:
       enabled: false
 
-    workflows:
-          # workflow definition using environment variables from .env file, uncomment when needed
-          # - name: ${WORKFLOW_NAME}
-          #   enabled: true
-          #   source:
-          #     type: database
-          #     databaseRef: source
-          #     table: ${WORKFLOW_DB_TABLE}
-          #     polling:
-          #       intervalMs: 1000
-          #   target:
-          #     type: solace
-          #     destinationType: topic
-          #     topic: ${WORKFLOW_SOLACE_TOPIC}
-
-          # demo workflow definitions included for reference, comment when not needed
-          - name: test_identification
-            enabled: true
-            source:
-              type: database
-              databaseRef: source
-              table: TEST_IDENTIFICATION
-              polling:
-                intervalMs: 1000
-            target:
-              type: solace
-              destinationType: topic
-              topic: db/oracle/test_identification
-
-          - name: test_metrics
-            enabled: true
-            source:
-              type: database
-              databaseRef: source
-              table: TEST_METRICS
-              polling:
-                intervalMs: 1000
-            target:
-              type: solace
-              destinationType: topic
-              topic: db/oracle/test_metrics
+    management:
+      leader-election:
+        mode: standalone
+      queue: management-queue-db-jpa
+      session:
+        host: ${SOLACE_HOST:tcp://solace-broker:55555}
+        msgVpn: ${SOLACE_VPN:default}
+        clientUsername: ${SOLACE_USERNAME:admin}
+        clientPassword: ${SOLACE_PASSWORD:admin}
 
 solace-persistence:
   datasource:
@@ -95,16 +85,19 @@ solace-persistence:
     username: ${ORACLE_USERNAME}
     password: ${ORACLE_PWD}
     hikari:
-      initializationFailTimeout: -1
+      minimum-idle: 1
+      maximum-pool-size: 5
       connection-timeout: 5000
-
-  source:
-    dbQueryMode: jpa
-    sendBatchSize: 1
-    queryMax: 100
-    triggerInterval: 2000
+      initializationFailTimeout: -1
 
 management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,metrics,loggers,logfile,env,workflows,bindings"
+  endpoint:
+    logfile:
+      external-file: log/connector/runtime.log
   observations:
     enabled: false
   tracing:
@@ -134,11 +127,15 @@ management:
       otlp:
         enabled: false
 
+
 debug: true
 logging:
   level:
     root: INFO
+    com.solace: INFO
     com.solace.connector.core: DEBUG
-    org.springframework.cloud.stream: INFO
+    org.springframework.cloud.stream: DEBUG
+    org.springframework.cloud.stream.binder: DEBUG
+    com.solacecoe.spring.cloud.stream.binders: DEBUG
     org.springframework.boot.context.config: TRACE
     org.springframework.core.env: TRACE

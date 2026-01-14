@@ -80,14 +80,17 @@ After unpacking/cloning:
 
 ```text
 sopdemo
+├── documents
 ├── images
 ├── jpa-oracle-config
+├── jpa-oracle-source-package
 ├── jpa-postgres-config
 │   └── lib
 ├── oracle-init
 ├── oracle-writer
 ├── postgres-init
-└── postgres-reporter
+├── postgres-reporter
+└── samples
 ```
 (source: `tree ../sopdemo -d > tree.txt`)
 
@@ -331,6 +334,20 @@ If you get stuck with the JPA micro‑integration configuration, enable DEBUG lo
 Happy testing! 🚀
 
 # Appendices
+
+## Appendix tips
+
+To remove extended attributes from a downloaded file:
+
+```sh
+xattr -c pubsubplus-connector-database-2.0.2-SNAPSHOT.jar
+```
+
+Save listed jar contents to file:
+
+```sh
+unzip -l pubsubplus-connector-database-2.0.2-SNAPSHOT.jar > pubsubplus-connector-database-2.0.2-SNAPSHOT.txt
+```
 
 ## Appendix docker compose
 

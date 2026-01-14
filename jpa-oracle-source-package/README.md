@@ -29,7 +29,7 @@ Rename `sample.env` to `.env`
 
 Change relevant variables in `.env`.
 
-Test setup
+## Test
 
 TODO: add docker commands
 
