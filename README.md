@@ -107,6 +107,8 @@ docker login container-registry.oracle.com
 docker pull container-registry.oracle.com/database/enterprise:19.3.0.0
 ```
 
+With the `dcoker login ...` you have to use token not password so you might need to login into Oracle Registry online first and create token to use that with the Docker command, see https://docs.oracle.com/en-us/iaas/Content/Functions/Tasks/functionsgenerateauthtokens.htm (that changed some time end of 2025).
+
 This is the image used by `oracle19c` in `docker-compose.yml`.
 
 NOTE: Docker Desktop (or similar) must be running the docker daemon. If not you might error message like:
