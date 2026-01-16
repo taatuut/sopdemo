@@ -56,23 +56,22 @@ services:
 
 #BO jpa-oracle-source
   jpa-oracle-source:
-    image: solace/mi-databases-jpa:2.0.1
+    image: solace/mi-databases-jpa:2.0.2
     container_name: jpa-oracle-source
-    platform: linux/amd64
     depends_on:
       - oracle19c
       - solace-broker
     env_file:
       - .env
     volumes:
-      - ./jpa-oracle-config:/app/external/spring/config:ro
+      #- ./jpa-oracle-config:/app/external/spring/config:ro
+      - ./jpa-oracle-config/Config:/config/Config:ro
     restart: unless-stopped
 #EO jpa-oracle-source
 
   jpa-postgres-target:
-    image: solace/mi-databases-jpa:2.0.1
+    image: solace/mi-databases-jpa:2.0.2
     container_name: jpa-postgres-target
-    platform: linux/amd64
     depends_on:
       - postgres
       - solace-broker

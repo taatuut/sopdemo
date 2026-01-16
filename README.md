@@ -29,7 +29,7 @@ This repo contains:
 
 > ⚠️ **Important**:  
 > The Solace Databases (JPA) Micro‑Integration container image is **not** on Docker Hub.  
-> You must download current version `pubsubplus-connector-database-2.0.1-image.tar` from https://solace.com/integration-hub/databases-jpa/ at the **Solace Integration Hub** and `docker load` it locally before using this demo, see documentation `pubsubplus-connector-database-2.0.1-User-Guide.pdf`.
+> You must download version `pubsubplus-connector-database-2.0.1-image.tar` from https://solace.com/integration-hub/databases-jpa/ at the **Solace Integration Hub** and `docker load` it locally before using this demo, see documentation `pubsubplus-connector-database-2.0.1-User-Guide.pdf`.
 
 ## High‑Level Architecture
 TODO: swap order JPA MI Oracle and Solace PubSub+ Standard, arrow from JPA MI Oracle to Oracle 19c DB
@@ -107,7 +107,7 @@ docker login container-registry.oracle.com
 docker pull container-registry.oracle.com/database/enterprise:19.3.0.0
 ```
 
-With the `dcoker login ...` you have to use token not password so you might need to login into Oracle Registry online first and create token to use that with the Docker command, see https://docs.oracle.com/en-us/iaas/Content/Functions/Tasks/functionsgenerateauthtokens.htm (that changed some time end of 2025).
+With the `docker login ...` you have to use token not password so you might need to login into Oracle Registry online first and create token to use that with the Docker command, see https://docs.oracle.com/en-us/iaas/Content/Functions/Tasks/functionsgenerateauthtokens.htm (that changed some time end of 2025).
 
 This is the image used by `oracle19c` in `docker-compose.yml`.
 
@@ -122,10 +122,20 @@ failed to connect to the docker API at unix:///Users/emilzegers/.docker/run/dock
 2. Download the **container image** for the JPA micro‑integration.
 3. Load it into Docker and tag it as `solace/mi-databases-jpa:2.0.1` (or adjust the tag and the compose file):
 
+For 2.0.1
+
 ```sh
 docker load -i ./pubsubplus-connector-database-2.0.1-image.tar
 docker images
 docker tag <IMAGE_ID> solace/mi-databases-jpa:2.0.1
+```
+
+For 2.0.2
+
+```sh
+docker load -i ./pubsubplus-connector-databaseV2.0.2.tar
+docker images
+docker tag <IMAGE_ID> solace/mi-databases-jpa:2.0.2
 ```
 
 Replace `<IMAGE_ID>` with the ID from `docker images`, for example:
