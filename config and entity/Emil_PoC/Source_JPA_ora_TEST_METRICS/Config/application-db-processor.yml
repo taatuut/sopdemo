@@ -1,0 +1,29 @@
+solace-db:
+  bindings:
+    input-0:
+      consumer:
+        format: json   #json or xml
+        tableKey: test_metrics
+        tableClass: com.solace.connectors.database.source.entity.TestMetrics
+        #childTableKey: passAddress
+        #childTableClass: com.solacecoe.connectors.database.source.entity.PassAddress
+        topic: db/oracle/test_metrics
+        lvqTopic: lvq/pmacs
+        #parentChildRelationKey: passengerId:passId   #,address:city
+        #dbParentChildMode: one2many #many2one
+        #dbParentCollection: addresses
+        #dbChildTable: passAddress
+        #dbReadIndicatorColumn: flag
+        #dbTrackingId: id
+        #dbReadTime: readtime
+        dbReadRecordSequentialIndicator: metricId
+        dbReadRecordSequentialOrder: asc
+        dbReadIndicatorBridgeFailedValue: true
+        dbReadIndicatorBridgeInProgressValue: true
+        #              enableMessageHeaderTrackId: true
+        #              messageHeaderTrackId: dbTrackId
+        #propertiesEnabled:
+        #  dbTrackingId: false
+        #  dbReadTime: false
+        #customMessageHeaders:
+          #TRACK_ID: id

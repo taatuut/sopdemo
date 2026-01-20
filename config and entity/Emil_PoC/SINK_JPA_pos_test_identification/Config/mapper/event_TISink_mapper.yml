@@ -1,0 +1,31 @@
+solace-connector-mapper:
+    mapper-metadata:
+        source-schema-type: json
+        target-schema-type: null
+        encrypted: null
+        escape-special-characters: true
+        source-schema-name: null
+        target-schema-name: null
+    payload-mapper:
+        mapper-entity_name:
+            source-xpath: id
+            source-datatype: string
+            target-xpath: TISink/testId
+            target-datatype: 'character varying'
+        mapper-id:
+            source-xpath: testName
+            source-datatype: string
+            target-xpath: TISink/testName
+            target-datatype: 'character varying'
+           
+        mapper-id-OPEN_PRICE_createdAt:
+            source-xpath: createdAt
+            source-datatype: string
+            target-xpath: TISink/createdAt
+            target-datatype: TIMESTAMP(6)
+            function:
+                function-date:
+                    sequence: null
+                    input:
+                        destinationFormat: 'yyyy/dd/MM HH:mm:ss'
+                        param1: createdAt

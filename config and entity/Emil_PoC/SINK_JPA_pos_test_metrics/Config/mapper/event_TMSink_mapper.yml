@@ -1,0 +1,42 @@
+solace-connector-mapper:
+    mapper-metadata:
+        source-schema-type: json
+        target-schema-type: null
+        encrypted: null
+        escape-special-characters: true
+        source-schema-name: null
+        target-schema-name: null
+    payload-mapper:
+        mapper-entity_namemetricId:
+            source-xpath: metricId
+            source-datatype: string
+            target-xpath: TMSink/metricId
+            target-datatype: 'character varying'
+        mapper-idtestId:
+            source-xpath: testId
+            source-datatype: string
+            target-xpath: TMSink/testId
+            target-datatype: 'character varying'
+        mapper-entity_namemetricName:
+            source-xpath: metricName
+            source-datatype: string
+            target-xpath: TMSink/metricName
+            target-datatype: 'character varying'
+        mapper-idmetricValue:
+            source-xpath: metricValue
+            source-datatype: string
+            target-xpath: TMSink/metricValue
+            target-datatype: 'character varying'           
+        mapper-id-OPEN_PRICE_createdAt:
+            source-xpath: recordedAt
+            source-datatype: string
+            target-xpath: TMSink/recordedAt
+            target-datatype: TIMESTAMP(6)
+            function:
+                function-date:
+                    sequence: null
+                    input:
+                        destinationFormat: 'yyyy/dd/MM HH:mm:ss'
+                        param1: recordedAt
+                        
+                       

@@ -1,0 +1,19 @@
+solace-db:
+  bindings:
+    output-0:
+      producer:
+        dbConnectorBlobEncoding: BASE64
+        dbConnectorTimestampFormat: 'yyyy/dd/MM HH:mm:ss'
+        dbMsgHeaderTimestampFormat: 'yyyy/dd/MM HH:mm:ss.SSS'
+        entities:
+          TISink:
+            clazz: com.solace.connectors.database.sink.entity.TestIdentificationSink
+            topicOperations:
+              save:
+                jsonNodePrefix:
+                topics:
+                  - db/oracle/test_identification
+              delete:
+                jsonNodePrefix:
+                topics:
+                  - ora/orders/pgbench_accounts/d/>

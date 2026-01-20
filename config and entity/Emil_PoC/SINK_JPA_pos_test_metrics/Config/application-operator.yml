@@ -1,0 +1,194 @@
+spring:
+  application:
+    name: DataBase-Sink
+  config:
+    import:
+      '0': application-db-processor.yml
+  jpa:
+    hibernate:
+      ddl-auto: none
+  boot:
+    admin:
+      client:
+        enabled: false
+        url: 'http://localhost:8082'
+        auto-registration: true
+        instance:
+          name: DataBase(Sink)
+          service-url: 'http://localhost:${server.port}'
+    application:
+      name: DataBase(Sink)
+  cloud:
+    vault:
+      enabled: false
+      uri: 'http://81.70.183.16:8201'
+      token: 00000000-0000-0000-0000-000000000000
+    stream:
+      bindings:
+        input-0:
+          destination: test_metrics
+          binder: solace
+          consumer:
+            batch-mode: true
+            concurrency: 1
+            max-attempts: 2
+            back-off-initial-interval: 5000
+            back-off-multiplier: 1
+            default-retryable: true
+            retryable-exceptions:
+              org.springframework.orm.jpa.JpaSystemException: true
+        output-0:
+          destination: test/passenger/lvq
+          binder: solace-db
+        input-1:
+          destination: test.addr.q
+          binder: solace
+          consumer:
+            batch-mode: true
+            concurrency: 1
+            max-attempts: 2
+            back-off-initial-interval: 5000
+            back-off-multiplier: 1
+            default-retryable: true
+            retryable-exceptions:
+              org.springframework.orm.jpa.JpaSystemException: true
+        output-1:
+          destination: test/addr/lvq
+          binder: solace-db
+      solace:
+        bindings:
+          input-0:
+            consumer:
+              batchMaxSize: 2000
+              batchTimeout: 5000
+              provisionSubscriptionsToDurableQueue: false
+              provisionDurableQueue: false
+              queueNamePrefix: ""
+              useFamiliarityInQueueName: false
+              useDestinationEncodingInQueueName: false
+              useGroupNameInQueueName: false
+              batchWaitStrategy: IMMEDIATE
+          input-1:
+            consumer:
+              batchMaxSize: 5
+              batchTimeout: 5000
+              provisionSubscriptionsToDurableQueue: false
+              provisionDurableQueue: false
+              queueNamePrefix: ""
+              useFamiliarityInQueueName: false
+              useDestinationEncodingInQueueName: false
+              useGroupNameInQueueName: false
+  datasource:
+    hikari:
+      minimum-idle: 1
+      maximum-pool-size: 2
+      idle-timeout: 500000
+      max-lifetime: 540000
+      connection-timeout: 5000
+solace:
+  connector:
+    workflows:
+      '0':
+        enabled: true
+      '1':
+        enabled: false
+    management:
+      leader-election:
+        mode: standalone
+        fail-over:
+          max-attempts: 3
+          back-off-initial-interval: 1000
+          back-off-max-interval: 10000
+          back-off-multiplier: 2
+      queue: mgt.acc
+      session:
+        host: 'tcp://54.198.156.244:55555'
+        msgVpn: default
+        clientUsername: admin
+        clientPassword: admin
+        connect-retries: -1
+        reconnect-retries: -1
+    security:
+      enabled: false
+  java:
+    host: 'tcp://54.198.156.244:55555'
+    msgVpn: default
+    clientUsername: admin
+    clientPassword: admin
+    connect-retries: -1
+    reconnect-retries: -1
+management:
+  metrics:
+    export:
+      simple:
+        enabled: true
+  endpoint:
+    logfile:
+      external-file: log/connector/runtime.log
+  endpoints:
+    jmx:
+      exposure:
+        exclude: '*'
+    web:
+      exposure:
+        include: 'health,metrics,loggers,logfile,channels,env,workflows,leaderelection,bindings'
+        exclude: 'diskSpace,mappings'
+server:
+  port: 8097
+logging:
+  level:
+    root: INFO
+    com.solacecoe.connectors.transformation: ERROR
+    com.solacesystems.jcsmp: info
+    com.solacecoe.spring.cloud.stream.binders.db: INFO
+    com.solace.spring: ERROR
+    org.springframework: ERROR
+    org.springframework.context.support.DefaultLifecycleProcessor: ERROR
+    org.hibernate.SQL: ERROR
+    org.hibernate.type.descriptor.sql.BasicBinder: ERROR
+    com.solace.spring.cloud.stream.binders.db.jdbc.DatabaseUtil: ERROR
+jasypt:
+  encryptor:
+    password: test123@!
+    algorithm: PBEWithMD5AndDES
+    iv-generator-classname: org.jasypt.iv.NoIvGenerator
+solace-persistence:
+  datasource:
+    maxDbRetry: 10
+    dbRetryWaitMilliseconds: 3000
+#    incrementalRetryCycle: 3  #first no. of retry, it should be static interval, after this value, goes to incremental time
+#    incrementalTime: 3000   
+    driver-class-name: org.postgresql.Driver
+    url: 'jdbc:postgresql://192.168.3.178:5432/postgres?currentSchema=public'
+    username: postgres
+    password: qwerasdf
+    hikari:
+      minimum-idle: 1
+      maximum-pool-size: 5
+      idle-timeout: 500000
+      max-lifetime: 540000
+      connection-timeout: 5000
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 100
+        order_updates: true
+        order_inserts: true
+        generate_statistics: false
+ #       dialect: org.hibernate.dialect.Oracle10gDialect
+    database: oracle
+  sink:
+    db-crud-mode: JPA
+    jpaBatchMode: true
+    jpaBatchSize: 2000
+    jpaMaxRetry: 2
+    jpaRetryWaitMilliseconds: 3000
+    enableDMQRetry: false    
+    redirectOnFailEnable: false
+    redirectOnUnknownTopic: false
+    redirectTopicPattern: 'rd/${TOPIC}'
+    payloadFormat: json

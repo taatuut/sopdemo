@@ -1,0 +1,31 @@
+solace-connector-mapper:
+  mapper-metadata:
+    escape-special-characters: true
+    schema-type:
+    encrypted:
+  payload-mapper:
+    mapper-name0:
+      source-xpath: test_metrics/metricId
+      source-datatype:
+      target-xpath: passenger/metricId
+      target-datatype:
+    mapper-name1:
+      source-xpath: test_metrics/testId
+      source-datatype:
+      target-xpath: passenger/testId
+      target-datatype:
+    mapper-name2:
+      source-xpath: test_metrics/metricName
+      source-datatype:
+      target-xpath: passenger/metricName
+      target-datatype:
+    mapper-name3:
+      source-xpath: test_metrics/metricValue
+      source-datatype:
+      target-xpath: passenger/metricValue
+      target-datatype:
+    mapper-name5:
+      source-xpath: test_metrics/recordedAt
+      source-datatype:
+      target-xpath: passenger/recordedAt
+      target-datatype:         
