@@ -17,6 +17,9 @@ def log_info(message: str, level: str = "INFO"):
 if __name__ == "__main__":
     while True:
         cur = conn.cursor()
+        cur.execute("SELECT * FROM test_identification ORDER BY test_id DESC LIMIT 1")
+        rows = cur.fetchall()
+        log_info(f"Latest identification: {rows}")
         cur.execute("SELECT * FROM test_metrics ORDER BY metric_id DESC LIMIT 5")
         rows = cur.fetchall()
         log_info(f"Latest metrics: {rows}")
