@@ -1,10 +1,6 @@
 -- Create an AQ demo queue (RAW payload) + test
--- Run this as SYS in ORCLPDB1:
-
--- Make sure you're still in the PDB
-SHOW CON_NAME;
-
--- TODO: Only continue if in ORCLPDB1
+ALTER SESSION SET CONTAINER = ORCLPDB1;
+ALTER SESSION SET CURRENT_SCHEMA = testuser;
 
 -- Create demo user
 CREATE USER aqdemo IDENTIFIED BY "AQdemo#123"
@@ -55,17 +51,21 @@ DECLARE
   enqopt    DBMS_AQ.ENQUEUE_OPTIONS_T;
   msgprop   DBMS_AQ.MESSAGE_PROPERTIES_T;
   msgid     RAW(16);
-  payload   RAW(2000) := UTL_RAW.CAST_TO_RAW('hello aq');
+  v_payload VARCHAR2(200);
 BEGIN
+  v_payload :=
+      'hello aq | uuid=' || RAWTOHEX(SYS_GUID());
+
   DBMS_AQ.ENQUEUE(
     queue_name         => 'AQDEMO_QUEUE',
     enqueue_options    => enqopt,
     message_properties => msgprop,
-    payload            => payload,
+    payload            => UTL_RAW.CAST_TO_RAW(v_payload),
     msgid              => msgid
   );
   COMMIT;
   DBMS_OUTPUT.PUT_LINE('Enqueued msgid=' || RAWTOHEX(msgid));
+  DBMS_OUTPUT.PUT_LINE(v_payload);
 END;
 /
 
