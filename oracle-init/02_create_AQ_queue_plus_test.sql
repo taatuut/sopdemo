@@ -54,7 +54,7 @@ DECLARE
   v_payload VARCHAR2(200);
 BEGIN
   v_payload :=
-      'hello aq | uuid=' || RAWTOHEX(SYS_GUID());
+      'hello aq, your uuid=' || RAWTOHEX(SYS_GUID());
 
   DBMS_AQ.ENQUEUE(
     queue_name         => 'AQDEMO_QUEUE',

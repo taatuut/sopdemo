@@ -65,7 +65,8 @@ services:
       - .env
     volumes:
       #- ./jpa-oracle-config:/app/external/spring/config:ro
-      - ./jpa-oracle-config/Config:/config/Config:ro
+      #- ./jpa-oracle-config:/config:ro
+      - ./config and entity/Emil_PoC/Source_JPA_ora_TEST_IDENTIFICATION:/config:ro
     restart: unless-stopped
 #EO jpa-oracle-source
 
@@ -81,7 +82,8 @@ services:
     ports:
       - "8091:8090"
     volumes:
-      - ./jpa-postgres-config:/app/external/spring/config:ro
+      #- ./jpa-postgres-config:/app/external/spring/config:ro
+      - ./config and entity/Emil_PoC/SINK_JPA_pos_test_identification:/config:ro
       - ./jpa-postgres-config/lib/postgresql-42.7.8.jar:/app/external/jdbc/postgresql-42.7.8.jar:ro
 
     environment:
