@@ -86,28 +86,6 @@ services:
       - ./config and entity/Emil_PoC/SINK_JPA_pos_test_identification:/config:ro
       - ./jpa-postgres-config/lib/postgresql-42.7.8.jar:/app/external/jdbc/postgresql-42.7.8.jar:ro
 
-    environment:
-      SPRING_CONFIG_LOCATION: file:/app/external/spring/config/
-      SPRING_CLOUD_CONFIG_ENABLED: "false"
-      SPRING_CLOUD_CONFIG_IMPORT_CHECK_ENABLED: "false"
-
-    entrypoint: >
-      sh -lc '
-        set -e;
-
-        # copy the original classpath file (don’t mutate /app in-place)
-        cp /app/jib-classpath-file /tmp/jib-classpath-file;
-
-        # append your JDBC jar to the end of the classpath
-        echo "/app/external/jdbc/postgresql-42.7.8.jar" >> /tmp/jib-classpath-file;
-
-        # some variants have jib-args-file; use it if present
-        EXTRA_ARGS="";
-        if [ -f /app/jib-args-file ]; then EXTRA_ARGS="@/app/jib-args-file"; fi;
-
-        exec /opt/java/openjdk/bin/java -cp @/tmp/jib-classpath-file $$EXTRA_ARGS @/app/jib-main-class-file
-      '
-
   oracle-writer:
     container_name: oracle-writer
     build: ./oracle-writer

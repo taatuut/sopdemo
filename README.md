@@ -1,5 +1,5 @@
 # sopdemo
-A Oracle 19c ⇄ Solace ⇄ PostgreSQL Demo
+An Oracle writer → Oracle 19c → JPA Micro-Integration → Solace → JPA Micro-Integration → PostgreSQL → PostgreSQL reporter Demo
 
 End-to-end demo showing how to stream data from an **Oracle 19c** source database into **PostgreSQL** via a **Solace PubSub+ Standard** event broker and the **Solace Databases (JPA) Micro‑Integration**, with Python services producing and consuming data.
 
@@ -16,20 +16,20 @@ This repo contains:
   - A Python **PostgreSQL reporter** service (continuously prints new rows)
 
 - Auto‑init database scripts:
-  - `oracle-init/01_create_schema.sql`
-  - `postgres-init/01_create_schema.sql`
+  - Oracle: `oracle-init/00_create_user.sql`, `oracle-init/01_create_schema.sql` and `oracle-init/02_create_AQ_queue_plus_test.sql`
+  - PostgreSQL: `postgres-init/01_create_schema.sql`
 
 - Python apps:
-  - `oracle-writer/` – inserts rows into Oracle
-  - `postgres-reporter/` – reads rows from PostgreSQL
+  - `oracle-writer/` – inserts rows into Oracle table(s)
+  - `postgres-reporter/` – reads rows from PostgreSQL table(s)
 
 - JPA Micro‑Integration configs:
-  - `jpa-oracle-config/application.yml`
-  - `jpa-postgres-config/application.yml`
+  - `config and entity/Emil_PoC/Source_JPA_ora_TEST_IDENTIFICATION`
+  - `config and entity/Emil_PoC/SINK_JPA_pos_test_identification`
 
 > ⚠️ **Important**:  
 > The Solace Databases (JPA) Micro‑Integration container image is **not** on Docker Hub.  
-> You must download version `pubsubplus-connector-database-2.0.1-image.tar` from https://solace.com/integration-hub/databases-jpa/ at the **Solace Integration Hub** and `docker load` it locally before using this demo, see documentation `pubsubplus-connector-database-2.0.1-User-Guide.pdf`.
+> You must download version `pubsubplus-connector-database-2.0.1-image.tar` (or acquire a later version) from https://solace.com/integration-hub/databases-jpa/ at the **Solace Integration Hub** and `docker load` it locally before using this demo, see documentation `pubsubplus-connector-database-2.0.1-User-Guide.pdf`.
 
 ## High‑Level Architecture
 TODO: swap order JPA MI Oracle and Solace PubSub+ Standard, arrow from JPA MI Oracle to Oracle 19c DB
@@ -112,6 +112,7 @@ With the `docker login ...` you have to use token not password so you might need
 This is the image used by `oracle19c` in `docker-compose.yml`.
 
 NOTE: Docker Desktop (or similar) must be running the docker daemon. If not you might error message like:
+
 ```sh
 failed to connect to the docker API at unix:///Users/emilzegers/.docker/run/docker.sock; check if the path is correct and if the daemon is running: dial unix /Users/emilzegers/.docker/run/docker.sock: connect: no such file or directory
 ```
@@ -204,8 +205,9 @@ After Oracle, Postgres, and the Solace broker are running:
 docker-compose up -d jpa-oracle-source jpa-postgres-target
 ```
 
-These will read their configuration from:
+These will read their configuration from the configuration volume mappings:
 
+TODO: these are not the current mappings, usign some test code. See `docker-compose.yml`.
 - `jpa-oracle-config/application.yml` (Oracle → Solace)
 - `jpa-postgres-config/application.yml` (Solace → Postgres)
 
@@ -274,9 +276,10 @@ docker logs -f sopdemo-postgres-reporter
 You should see lines similar to:
 
 ```text
-[2025-01-01 12:00:05+00:00] test_id=1 (LoadTest-2025-01-01T12:00:05.123456), latency_ms=42.17
-[2025-01-01 12:00:05+00:00] test_id=1 (LoadTest-2025-01-01T12:00:05.123456), throughput_msgps=87.33
-[2025-01-01 12:00:05+00:00] test_id=1 (LoadTest-2025-01-01T12:00:05.123456), error_rate=0.89
+2026-01-29T15:35:06.940Z INFO Latest identification: [(10078, 'demo', datetime.datetime(2026, 1, 21, 21, 13, 46, tzinfo=datetime.timezone.utc))]
+2026-01-29T15:35:06.941Z INFO Latest metrics: []
+2026-01-29T15:35:16.942Z INFO Latest identification: [(10078, 'demo', datetime.datetime(2026, 1, 21, 21, 13, 46, tzinfo=datetime.timezone.utc))]
+2026-01-29T15:35:16.942Z INFO Latest metrics: []
 ```
 
 ## 8. Inspecting the Databases Manually

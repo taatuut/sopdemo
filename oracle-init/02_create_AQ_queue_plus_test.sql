@@ -106,7 +106,7 @@ BEGIN
   );
   COMMIT;
 
-  DBMS_OUTPUT.PUT_LINE('Dequeued msgid=' || RAWTOHEX(msgid));
+  DBMS_OUTPUT.PUT_LINE('Retrieved msgid=' || RAWTOHEX(msgid));
   DBMS_OUTPUT.PUT_LINE('Payload=' || UTL_RAW.CAST_TO_VARCHAR2(payload));
   DBMS_OUTPUT.PUT_LINE('dequeue_mode=' || dequeue_mode_name(deqopt.dequeue_mode));
 END;
