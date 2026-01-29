@@ -5,6 +5,10 @@
 # which python
 # pip install --upgrade pip
 # pip install -r requirements.txt
+# Run Python script to browse AQ messages
+# (prerequisite: Oracle Database up & running with Advanced Queuing set up by the 02_create_AQ_queue_plus_test.sql script):
+# python3 ez_aq_browser.py
+# NOTE: credetials and host values hardcoded.
 
 import oracledb
 print("oracledb version:", oracledb.__version__)

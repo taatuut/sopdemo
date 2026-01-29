@@ -1,3 +1,6 @@
+-- In Containers oracle19c Exec run command:
+-- sqlplus / as sysdb
+
 -- Create an AQ demo queue (RAW payload) + test
 ALTER SESSION SET CONTAINER = ORCLPDB1;
 ALTER SESSION SET CURRENT_SCHEMA = testuser;
