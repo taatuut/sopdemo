@@ -207,7 +207,7 @@ docker-compose up -d jpa-oracle-source jpa-postgres-target
 
 These will read their configuration from the configuration volume mappings:
 
-TODO: these are not the current mappings, usign some test code. See `docker-compose.yml`.
+TODO: these are not the current mappings, using some test code. See `docker-compose.yml`.
 - `jpa-oracle-config/application.yml` (Oracle → Solace)
 - `jpa-postgres-config/application.yml` (Solace → Postgres)
 
