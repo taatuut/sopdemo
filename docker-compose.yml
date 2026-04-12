@@ -4,7 +4,6 @@ services:
   solace-broker:
     image: solace/solace-pubsub-standard:latest
     container_name: solace-broker
-    platform: linux/amd64
     shm_size: 2g
     ulimits:
       nofile:

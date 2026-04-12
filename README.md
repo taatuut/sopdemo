@@ -107,7 +107,7 @@ docker login container-registry.oracle.com
 docker pull container-registry.oracle.com/database/enterprise:19.3.0.0
 ```
 
-With the `docker login ...` you have to use token not password so you might need to login into Oracle Registry online first and create token to use that with the Docker command, see https://docs.oracle.com/en-us/iaas/Content/Functions/Tasks/functionsgenerateauthtokens.htm (that changed some time end of 2025).
+With the `docker login ...` you have to use **token** not password so you might need to login into Oracle Registry online first and create token to use that with the Docker command, see https://docs.oracle.com/en-us/iaas/Content/Functions/Tasks/functionsgenerateauthtokens.htm (that changed some time end of 2025).
 
 This is the image used by `oracle19c` in `docker-compose.yml`.
 
@@ -123,7 +123,7 @@ failed to connect to the docker API at unix:///Users/emilzegers/.docker/run/dock
 2. Download the **container image** for the JPA micro‑integration.
 3. Load it into Docker and tag it as `solace/mi-databases-jpa:2.0.1` (or adjust the tag and the compose file):
 
-For 2.0.1
+For 2.0.1 (previously used in this demo)
 
 ```sh
 docker load -i ./pubsubplus-connector-database-2.0.1-image.tar
@@ -131,7 +131,7 @@ docker images
 docker tag <IMAGE_ID> solace/mi-databases-jpa:2.0.1
 ```
 
-For 2.0.2
+For 2.0.2 (now used in this demo)
 
 ```sh
 docker load -i ./pubsubplus-connector-databaseV2.0.2.tar
@@ -180,7 +180,7 @@ docker-compose up -d oracle19c postgres solace-broker
 
 The Oracle container will automatically run `oracle-init/01_create_schema.sql` during its first startup.
 
-**Wait a few minutes** for Oracle to initialize. You can check logs and/or stats:
+**Wait a few minutes** for Oracle to initialize. You can check logs and/or stats with below commands or monitor in Docker Desktop:
 
 ```sh
 docker logs -f oracle19c
@@ -195,19 +195,19 @@ DATABASE IS READY TO USE!
 #########################
 ```
 
-TIP: DBeaver to easily check Oracle and PostgreSQL database connectivity and schema creation (https://dbeaver.io/download/ or `brew install --cask dbeaver-community`).
+TIP: Use DBeaver to easily check Oracle and PostgreSQL database connectivity and schema creation (https://dbeaver.io/download/ or `brew install --cask dbeaver-community`).
 
 ### Start JPA Micro‑Integration Instances
 
-After Oracle, Postgres, and the Solace broker are running:
+Ensure that Oracle, Postgres, and the Solace containers are running, then:
 
 ```sh
 docker-compose up -d jpa-oracle-source jpa-postgres-target
 ```
 
-These will read their configuration from the configuration volume mappings:
+These will read their configuration from the configuration volume mappings.
 
-TODO: these are not the current mappings, using some test code. See `docker-compose.yml`.
+TODO: adjust below mappings as these are not the current ones using some test code. See `docker-compose.yml`.
 - `jpa-oracle-config/application.yml` (Oracle → Solace)
 - `jpa-postgres-config/application.yml` (Solace → Postgres)
 
@@ -222,6 +222,8 @@ Check that the queues:
 
 - `Q.ORACLE.TEST_IDENTIFICATION`
 - `Q.ORACLE.TEST_METRICS`
+- `pmacs_lvq`
+- `pmacs_lvq1`
 
 exist and have the correct topic subscriptions configured (also defined in the JPA MI config).
 
@@ -229,6 +231,10 @@ If not present, you can quickly create them in the UI (or via CLI/SEMP) and add 
 
 - `Q.ORACLE.TEST_IDENTIFICATION` → `db/oracle/test_identification`
 - `Q.ORACLE.TEST_METRICS` → `db/oracle/test_metrics`
+- `pmacs_lvq` → `lvq/pmacs`
+- `pmacs_lvq1` → `lvq/pmacs1`
+
+TODO: automate this, have script for this purpose
 
 ## Start the Demo Data Flow
 
@@ -313,6 +319,8 @@ SELECT * FROM test_metrics ORDER BY metric_id DESC;
 ```
 
 You should see rows corresponding to the ones in Oracle.
+
+Or use DBeaver if your prefer an easy GUI.
 
 ## 9. Stopping and Cleaning Up
 
